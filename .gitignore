@@ -35,9 +35,6 @@ build/
 dist/
 *.egg-info/
 
-# Database
-*.sqlite3
-*.db
 
 # Temporary files
 *.tmp
