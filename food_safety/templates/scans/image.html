@@ -1,0 +1,58 @@
+{% extends "base.html" %}
+{% block title %}تحليل صورة الملصق{% endblock %}
+{% block topbar_title %}تحليل قائمة المكونات من صورة{% endblock %}
+{% block content %}
+<div class="page-header">
+  <div>
+    <h1>تحليل صورة الملصق</h1>
+    <p class="lead">ارفع صورة واضحة لقائمة المكونات. الاستخراج منفصل عن قرار السلامة — التصنيف يتم عبر قواعد تنظيمية صريحة.</p>
+  </div>
+  <a class="btn btn-secondary" href="{% url 'scans:manual' %}">إدخال نصي بدل الصورة</a>
+</div>
+
+<section class="card panel" style="max-width:720px">
+  <form method="post" enctype="multipart/form-data" class="form-grid" id="ocrForm">
+    {% csrf_token %}
+    {% for field in form %}
+      <div>
+        {% if not field.is_hidden %}
+          <label for="{{ field.id_for_label }}">{{ field.label }}</label>
+        {% endif %}
+        {{ field }}
+        {% if field.name == 'image' %}
+          <div class="help">يفضّل صورة أفقية واضحة للنص الإنجليزي أو أرقام E (مثل E171).</div>
+        {% endif %}
+        {% if field.name == 'location_consent' %}
+          <div class="help">اختياري — لربط الفحص بالموقع عند الحاجة.</div>
+        {% endif %}
+        {{ field.errors }}
+      </div>
+    {% endfor %}
+    <div class="actions">
+      <button class="btn btn-primary" type="submit" id="ocrSubmit"><i data-lucide="upload"></i> بدء التحليل</button>
+      <a class="btn btn-secondary" href="{% url 'scans:hub' %}">رجوع</a>
+    </div>
+  </form>
+  <div id="ocrLoading" hidden style="margin-top:1rem">
+    <div class="alert alert-info">
+      جارٍ استخراج النص من الصورة… قد يستغرق بضع ثوانٍ.
+    </div>
+  </div>
+</section>
+
+
+{% endblock %}
+{% block extra_js %}
+<script>
+document.querySelector('[name=location_consent]')?.setAttribute('data-geo-consent','');
+(function(){
+  const form = document.getElementById('ocrForm');
+  const loading = document.getElementById('ocrLoading');
+  const btn = document.getElementById('ocrSubmit');
+  form?.addEventListener('submit', function(){
+    if (loading) loading.hidden = false;
+    if (btn) { btn.disabled = true; btn.innerHTML = 'جارٍ التحليل…'; }
+  });
+})();
+</script>
+{% endblock %}

@@ -1,0 +1,107 @@
+{% extends "base.html" %}
+{% block title %}{{ ingredient.name_ar }}{% endblock %}
+{% block topbar_title %}تفاصيل المادة{% endblock %}
+{% block content %}
+<div class="page-header">
+  <div>
+    <h1>{% if ingredient.e_number %}{{ ingredient.e_number }} — {% endif %}{{ ingredient.name_ar }}</h1>
+    <p class="lead">{{ ingredient.name_en }}
+      · {% if ingredient.data_origin == "REFERENCE" %}مرتبط بمرجع معياري{% else %}بيانات محلية{% endif %}
+    </p>
+  </div>
+  <div class="actions">
+    {% if ingredient.safety_status == "PROHIBITED" %}
+      {% include "partials/status_badge.html" with code="UNSAFE" label=ingredient.get_safety_status_display %}
+    {% elif ingredient.safety_status == "RESTRICTED" %}
+      {% include "partials/status_badge.html" with code="WARNING" label=ingredient.get_safety_status_display %}
+    {% else %}
+      {% include "partials/status_badge.html" with code="PENDING" label=ingredient.get_safety_status_display %}
+    {% endif %}
+    {% if can_manage %}
+      <a class="btn btn-primary" href="{% url 'ingredients:banned_edit' ingredient.id %}"><i data-lucide="pencil"></i> تعديل</a>
+    {% endif %}
+    {% if ingredient.reference_additive_id %}
+      <a class="btn btn-teal" href="{% url 'reference:detail' ingredient.reference_additive_id %}">السجل المرجعي</a>
+    {% endif %}
+    <a class="btn btn-secondary" href="{% url 'ingredients:banned' %}">رجوع للقائمة</a>
+  </div>
+</div>
+
+{% if effective %}
+<div class="alert alert-info panel">
+  <strong>التصنيف النافذ ({{ effective.jurisdiction }}):</strong>
+  {{ effective.regulatory_status }} — {{ effective.reason }}
+  <div class="muted small" style="margin-top:0.35rem">
+    طبقة القرار: {{ effective.decision_layer }} · Codex: {{ effective.codex_status|default:"—" }} · JECFA: {{ effective.jecfa_status|default:"—" }}
+  </div>
+</div>
+{% endif %}
+
+<div class="grid-2 panel">
+  <section class="card">
+    <h2 class="card-title">صورة المادة</h2>
+    <div style="margin-top:0.85rem">
+      {% if ingredient.image %}
+        <img src="{{ ingredient.image.url }}" alt="{{ ingredient.name_ar }}" class="material-detail-image">
+      {% else %}
+        <div class="material-placeholder material-placeholder-lg">لا توجد صورة</div>
+        <p class="muted small" style="margin-top:0.5rem">الصورة اختيارية ولا تؤثر على تصنيف الحظر.</p>
+      {% endif %}
+    </div>
+  </section>
+
+  <section class="card">
+    <h2 class="card-title">البيانات الرقابية</h2>
+    <div class="stack" style="margin-top:0.85rem">
+      <div><span class="muted small">رقم E / INS</span><div><strong>{{ ingredient.e_number|default:"—" }}</strong></div></div>
+      <div><span class="muted small">CAS</span><div>{{ ingredient.cas_number|default:"—" }}</div></div>
+      <div><span class="muted small">نوع المادة</span><div>{{ ingredient.category|default:"—" }}</div></div>
+      <div><span class="muted small">مستوى الخطورة</span><div>{{ ingredient.get_risk_level_display }}</div></div>
+      <div><span class="muted small">الحالة (سجل محلي)</span><div>{{ ingredient.get_safety_status_display }}</div></div>
+      <div><span class="muted small">مصدر / مرجع</span><div>{{ ingredient.source|default:"—" }}</div></div>
+      <div><span class="muted small">رقم المرجع</span><div>{{ ingredient.regulatory_status|default:"—" }}</div></div>
+      <div><span class="muted small">أصل البيانات</span><div>{{ ingredient.get_data_origin_display }}</div></div>
+    </div>
+  </section>
+</div>
+
+<section class="card panel">
+  <div class="explain-box" style="margin:0">
+    <strong>سبب التصنيف</strong>
+    <div style="margin-top:0.35rem">{{ ingredient.reason|default:"—" }}</div>
+  </div>
+  {% if ingredient.notes %}
+  <div style="margin-top:1rem">
+    <strong>ملاحظات</strong>
+    <p class="muted" style="margin:0.35rem 0 0">{{ ingredient.notes }}</p>
+  </div>
+  {% endif %}
+</section>
+
+<section class="card panel">
+  <h2 class="card-title">سجل الإضافة والتعديل</h2>
+  <div class="grid-2" style="margin-top:0.85rem">
+    <div>
+      <span class="muted small">تاريخ الإضافة</span>
+      <div>{{ ingredient.created_at|date:"Y-m-d H:i" }}</div>
+      <div class="muted small">بواسطة: {{ ingredient.created_by|default:"—" }}</div>
+    </div>
+    <div>
+      <span class="muted small">آخر تعديل</span>
+      <div>{{ ingredient.updated_at|date:"Y-m-d H:i" }}</div>
+      <div class="muted small">بواسطة: {{ ingredient.updated_by|default:"—" }}</div>
+    </div>
+  </div>
+</section>
+
+<div class="grid-2">
+  <section class="card">
+    <h2 class="card-title">المرادفات</h2>
+    <ul>{% for a in ingredient.aliases.all %}<li>{{ a.alias }} <span class="muted">({{ a.language }})</span></li>{% empty %}<li class="muted">—</li>{% endfor %}</ul>
+  </section>
+  <section class="card">
+    <h2 class="card-title">المصادر المرجعية</h2>
+    <ul>{% for s in ingredient.sources.all %}<li>{{ s.source_name }}{% if s.document_reference %} — {{ s.document_reference }}{% endif %}</li>{% empty %}<li class="muted">—</li>{% endfor %}</ul>
+  </section>
+</div>
+{% endblock %}

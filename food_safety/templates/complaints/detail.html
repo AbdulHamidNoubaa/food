@@ -1,0 +1,73 @@
+{% extends "base.html" %}
+{% block title %}تفاصيل البلاغ{% endblock %}
+{% block topbar_title %}تفاصيل البلاغ{% endblock %}
+{% block content %}
+<div class="page-header">
+  <div>
+    <h1>بلاغ {{ complaint.id|truncatechars:13 }}</h1>
+    <p class="lead">{{ complaint.detected_issue|truncatechars:120 }}</p>
+  </div>
+  <div class="actions">
+    {% include "partials/status_badge.html" with code=complaint.status label=complaint.get_status_display %}
+    {% include "partials/status_badge.html" with code=complaint.severity_level label=complaint.get_severity_level_display %}
+  </div>
+</div>
+
+<div class="grid-2 panel">
+  <section class="card">
+    <h2 class="card-title">بيانات البلاغ</h2>
+    <div class="stack" style="margin-top:0.75rem">
+      <div><span class="muted small">المبلّغ</span><div>{{ complaint.reporter }}</div></div>
+      <div><span class="muted small">المنتج</span><div>{{ complaint.product.name_ar|default:"—" }}</div></div>
+      <div><span class="muted small">المنشأة</span>
+        <div>
+          {% if complaint.store %}
+            <a href="{% url 'stores:detail' complaint.store.id %}">{{ complaint.store.name }}</a>
+            <div class="muted small">{{ complaint.store.type_display }}{% if complaint.store.latitude %} · {{ complaint.store.latitude }}, {{ complaint.store.longitude }}{% endif %}</div>
+          {% else %}—{% endif %}
+        </div>
+      </div>
+      <div><span class="muted small">الوصف</span><div>{{ complaint.description|default:"—" }}</div></div>
+      {% if complaint.latitude %}
+      <div><span class="muted small">الإحداثيات</span><div>{{ complaint.latitude }}, {{ complaint.longitude }}</div></div>
+      {% endif %}
+      <div><span class="muted small">درجة الخطورة</span><div>{{ complaint.severity_score }} — {{ complaint.get_severity_level_display }}</div></div>
+    </div>
+  </section>
+  <section class="card">
+    <h2 class="card-title">الأدلة وسجل المتابعة</h2>
+    <div style="margin-top:0.75rem">
+      {% for a in complaint.attachments.all %}
+        <p><a href="{{ a.file.url }}" target="_blank">مرفق {{ forloop.counter }}</a></p>
+      {% empty %}<p class="muted">لا مرفقات</p>{% endfor %}
+    </div>
+    <ul class="stack" style="margin-top:1rem;padding:0;list-style:none">
+      {% for h in complaint.history.all %}
+      <li class="alert alert-info" style="margin:0">
+        <strong>{{ h.changed_at|date:"Y-m-d H:i" }}</strong>
+        — {{ h.old_status|default:"—" }} ← {{ h.new_status }}
+        <div class="small">{{ h.notes }}</div>
+      </li>
+      {% empty %}<li class="muted">لا سجل بعد</li>{% endfor %}
+    </ul>
+  </section>
+</div>
+
+{% if status_form %}
+<section class="card">
+  <h2 class="card-title">إدارة البلاغ</h2>
+  <form method="post" action="{% url 'complaints:update_status' complaint.id %}" class="form-grid two" style="margin-top:0.85rem">
+    {% csrf_token %}
+    {% for field in status_form %}
+      <div>
+        <label for="{{ field.id_for_label }}">{{ field.label }}</label>
+        {{ field }}
+      </div>
+    {% endfor %}
+    <div class="actions" style="grid-column:1 / -1">
+      <button class="btn btn-primary" type="submit">تحديث الحالة</button>
+    </div>
+  </form>
+</section>
+{% endif %}
+{% endblock %}

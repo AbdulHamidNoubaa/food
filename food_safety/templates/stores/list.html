@@ -1,0 +1,87 @@
+{% extends "base.html" %}
+{% block title %}المنشآت الغذائية{% endblock %}
+{% block topbar_title %}المنشآت الغذائية{% endblock %}
+{% block content %}
+<div class="page-header">
+  <div>
+    <h1>المنشآت الغذائية</h1>
+    <p class="lead">قاعدة جغرافية تنمو مع البلاغات — لا قائمة ثابتة مسبقًا. المنشأة تُسجَّل عند أول بلاغ عنها.</p>
+  </div>
+  <div class="actions">
+    <a class="btn btn-teal" href="{% url 'stores:map' %}"><i data-lucide="map"></i> خريطة المنشآت</a>
+  </div>
+</div>
+
+<form class="filters panel" method="get">
+  <div>
+    <label for="q">بحث</label>
+    <input type="search" id="q" name="q" value="{{ q }}" placeholder="اسم / مدينة / نوع">
+  </div>
+  <div>
+    <label for="type">النوع</label>
+    <select id="type" name="type">
+      <option value="">الكل</option>
+      {% for code, label in type_choices %}
+      <option value="{{ code }}" {% if etype == code %}selected{% endif %}>{{ label }}</option>
+      {% endfor %}
+    </select>
+  </div>
+  <div>
+    <label for="status">الحالة</label>
+    <select id="status" name="status">
+      <option value="">الكل</option>
+      {% for code, label in status_choices %}
+      <option value="{{ code }}" {% if status == code %}selected{% endif %}>{{ label }}</option>
+      {% endfor %}
+    </select>
+  </div>
+  <div style="align-self:end">
+    <button class="btn btn-primary" type="submit"><i data-lucide="search"></i> تصفية</button>
+  </div>
+</form>
+
+<section class="card panel">
+  <div class="table-wrap">
+    <table class="table">
+      <thead>
+        <tr>
+          <th>الاسم</th>
+          <th>النوع</th>
+          <th>المدينة</th>
+          <th>الحالة</th>
+          <th>البلاغات</th>
+          <th></th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for s in page_obj %}
+        <tr>
+          <td><strong>{{ s.name }}</strong></td>
+          <td>{{ s.type_display }}</td>
+          <td>{{ s.city|default:"—" }}{% if s.district %} · {{ s.district }}{% endif %}</td>
+          <td>{{ s.get_status_display }}</td>
+          <td>{{ s.complaint_count }}</td>
+          <td><a class="btn btn-secondary btn-sm" href="{% url 'stores:detail' s.id %}">تفاصيل</a></td>
+        </tr>
+        {% empty %}
+        <tr>
+          <td colspan="6">
+            <div class="empty-state">
+              <h3>لا منشآت بعد</h3>
+              <p>ستظهر المنشآت هنا تلقائيًا بعد أول بلاغ يُنشئها المستخدمون.</p>
+            </div>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% if page_obj.has_other_pages %}
+  <div class="actions" style="margin-top:1rem">
+    {% if page_obj.has_previous %}<a class="btn btn-secondary" href="?q={{ q }}&type={{ etype }}&status={{ status }}&page={{ page_obj.previous_page_number }}">السابق</a>{% endif %}
+    <span class="muted">صفحة {{ page_obj.number }} / {{ page_obj.paginator.num_pages }}</span>
+    {% if page_obj.has_next %}<a class="btn btn-secondary" href="?q={{ q }}&type={{ etype }}&status={{ status }}&page={{ page_obj.next_page_number }}">التالي</a>{% endif %}
+  </div>
+  {% endif %}
+</section>
+{% endblock %}

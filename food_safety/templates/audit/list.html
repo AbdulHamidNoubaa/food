@@ -1,0 +1,41 @@
+{% extends "base.html" %}
+{% block title %}سجل العمليات{% endblock %}
+{% block topbar_title %}سجل العمليات{% endblock %}
+{% block content %}
+<div class="page-header">
+  <div>
+    <h1>سجل العمليات</h1>
+    <p class="lead">تتبع تدقيقي للإجراءات الحساسة داخل النظام.</p>
+  </div>
+</div>
+<section class="card panel">
+  <form method="get" class="filters" style="grid-template-columns:1fr auto">
+    <div><label>العملية</label><input type="search" name="action" value="{{ action }}" placeholder="complaint.create / status_change"></div>
+    <div><button class="btn btn-primary" type="submit">بحث</button></div>
+  </form>
+</section>
+<section class="card">
+  <div class="table-wrap">
+    <table class="table">
+      <thead>
+        <tr><th>المستخدم</th><th>العملية</th><th>الوحدة</th><th>المعرّف</th><th>التاريخ</th><th>الوقت</th><th>IP</th></tr>
+      </thead>
+      <tbody>
+        {% for log in page_obj %}
+        <tr>
+          <td>{{ log.user|default:"—" }}</td>
+          <td><strong>{{ log.action }}</strong></td>
+          <td>{{ log.entity_type|default:"—" }}</td>
+          <td class="small">{{ log.entity_id|truncatechars:12 }}</td>
+          <td>{{ log.created_at|date:"Y-m-d" }}</td>
+          <td>{{ log.created_at|date:"H:i:s" }}</td>
+          <td>{{ log.ip_address|default:"—" }}</td>
+        </tr>
+        {% empty %}
+        <tr><td colspan="7"><div class="empty-state"><h3>لا توجد سجلات بعد</h3><p>ستظهر هنا العمليات الحساسة مثل إنشاء البلاغات وتغيير الحالات.</p></div></td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</section>
+{% endblock %}

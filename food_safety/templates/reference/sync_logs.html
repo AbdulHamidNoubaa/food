@@ -1,0 +1,44 @@
+{% extends "base.html" %}
+{% block title %}سجل مزامنة المرجع{% endblock %}
+{% block topbar_title %}سجل المزامنة{% endblock %}
+{% block content %}
+<div class="page-header">
+  <div>
+    <h1>سجل استيراد / مزامنة القاعدة المرجعية</h1>
+    <p class="lead">المزامنة لا تحذف التصنيفات المحلية (Local Overrides).</p>
+  </div>
+  <a class="btn btn-secondary" href="{% url 'reference:catalog' %}">رجوع</a>
+</div>
+<section class="card panel">
+  <div class="table-wrap">
+    <table class="table">
+      <thead>
+        <tr>
+          <th>الإجراء</th>
+          <th>المصدر</th>
+          <th>البداية</th>
+          <th>مقروء</th>
+          <th>جديد</th>
+          <th>محدّث</th>
+          <th>نجاح</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for log in logs %}
+        <tr>
+          <td>{{ log.get_action_display }}</td>
+          <td>{{ log.source|default:"—" }}</td>
+          <td>{{ log.started_at|date:"Y-m-d H:i" }}</td>
+          <td>{{ log.records_read }}</td>
+          <td>{{ log.records_created }}</td>
+          <td>{{ log.records_updated }}</td>
+          <td>{% if log.success %}نعم{% else %}لا{% endif %}</td>
+        </tr>
+        {% empty %}
+        <tr><td colspan="7" class="muted">لا سجلات بعد</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</section>
+{% endblock %}

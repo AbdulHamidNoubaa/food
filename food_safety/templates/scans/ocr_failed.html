@@ -1,0 +1,22 @@
+{% extends "base.html" %}
+{% block title %}تعذر استخراج النص{% endblock %}
+{% block topbar_title %}تحليل بيانات الملصق{% endblock %}
+{% block content %}
+<section class="card empty-state" style="max-width:680px;margin-inline:auto">
+  <h1>تعذر إتمام استخراج النص</h1>
+  <p>{{ message|default:"يرجى التقاط صورة أوضح لقائمة المكونات، أو إدخال النص يدويًا." }}</p>
+  {% if engine_note %}
+  <p class="muted small" style="margin-top:0.75rem">تفاصيل تقنية: {{ engine_note }}</p>
+  {% endif %}
+  <div class="actions" style="justify-content:center;margin-top:1.25rem">
+    <a class="btn btn-primary" href="{% url 'scans:image' %}">إعادة المحاولة</a>
+    <a class="btn btn-secondary" href="{% url 'scans:manual' %}">إدخال نصي</a>
+  </div>
+  <div class="alert alert-info" style="margin-top:1.25rem;text-align:start">
+    <strong>للاختبار السريع بدون OCR:</strong>
+    استخدم <a href="{% url 'scans:manual' %}">الإدخال النصي</a> مثل
+    <code>Sugar, E171, E120, E330</code>
+    أو امسح الباركود <code>6223000000002</code>.
+  </div>
+</section>
+{% endblock %}

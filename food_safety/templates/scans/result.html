@@ -1,0 +1,123 @@
+{% extends "base.html" %}
+{% block title %}نتيجة التحقق{% endblock %}
+{% block topbar_title %}نتيجة التحقق{% endblock %}
+{% block content %}
+{% if assessment %}
+<div class="result-hero {{ assessment.product_status }}">
+  <div class="result-label">نتيجة التحقق من السلامة</div>
+  <div class="result-status">{{ assessment.get_product_status_display }}</div>
+  <p style="margin:0 0 0.75rem;color:var(--muted)">
+    {% if assessment.product_status == "SAFE" %}
+      المنتج مطابق لمتطلبات السلامة وفق القواعد الحالية.
+    {% elif assessment.product_status == "WARNING" %}
+      المنتج يحتاج إلى مراجعة بسبب وجود مكوّن مقيد أو يتطلب تحققًا إضافيًا.
+    {% elif assessment.product_status == "UNSAFE" %}
+      المنتج غير آمن وفق قواعد التحقق الحالية لوجود مادة محظورة أو عالية الخطورة.
+    {% else %}
+      لم تكتمل بيانات المطابقة بشكل كافٍ لاعتبار المنتج آمنًا.
+    {% endif %}
+  </p>
+  {% include "partials/status_badge.html" with code=assessment.product_status label=assessment.get_product_status_display %}
+</div>
+
+<div class="explain-box">
+  <strong>سبب النتيجة (محرك القواعد):</strong>
+  <div style="margin-top:0.35rem">{{ assessment.summary_reason }}</div>
+</div>
+{% endif %}
+
+<section class="card panel">
+  <div class="card-header">
+    <h2 class="card-title">بيانات المنتج</h2>
+    <span class="muted small">{{ scan.created_at|date:"Y-m-d H:i" }} · {{ scan.get_scan_method_display }}</span>
+  </div>
+  {% if scan.product %}
+  <div class="grid-2">
+    <div><span class="muted small">اسم المنتج</span><div><strong>{{ scan.product.name_ar }}</strong></div></div>
+    <div><span class="muted small">Barcode</span><div>{{ scan.product.barcode }}</div></div>
+    <div><span class="muted small">العلامة / الشركة</span><div>{{ scan.product.brand.name_ar|default:scan.product.manufacturer|default:"—" }}</div></div>
+    <div><span class="muted small">بلد المنشأ</span><div>{{ scan.product.country_of_origin|default:"—" }}</div></div>
+    <div><span class="muted small">تاريخ الصلاحية</span><div>{{ scan.product.expiry_date|default:"—" }}</div></div>
+    <div><span class="muted small">الفئة</span><div>{{ scan.product.category|default:"—" }}</div></div>
+  </div>
+  {% else %}
+  <p class="muted">تحقق عبر {{ scan.get_scan_method_display }}{% if scan.query_text %} — {{ scan.query_text }}{% endif %}</p>
+  {% endif %}
+</section>
+
+{% if assessment %}
+<section class="card panel">
+  <div class="card-header">
+    <h2 class="card-title">تفاصيل المكونات والمضافات</h2>
+  </div>
+  <div class="table-wrap">
+    <table class="table">
+      <thead>
+        <tr>
+          <th>المادة</th>
+          <th>الكود</th>
+          <th>حالة السلامة</th>
+          <th>التصنيف التنظيمي</th>
+          <th>طبقة القرار</th>
+          <th>ثقة الاستخراج</th>
+          <th>سبب التصنيف</th>
+          <th>المصدر</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for r in assessment.ingredient_results %}
+        <tr>
+          <td>
+            <strong>{{ r.name_ar|default:r.input }}</strong>
+            {% if r.name_en %}<div class="muted small">{{ r.name_en }}</div>{% endif %}
+            {% if r.codex_status or r.jecfa_status %}
+            <div class="muted small">Codex: {{ r.codex_status|default:"—" }} · JECFA: {{ r.jecfa_status|default:"—" }}</div>
+            {% endif %}
+          </td>
+          <td>{{ r.e_number|default:"—" }}</td>
+          <td>{% include "partials/status_badge.html" with code=r.safety_status label=r.safety_status %}</td>
+          <td>{{ r.regulatory_status|default:"—" }}</td>
+          <td><span class="muted small">{{ r.decision_layer|default:"—" }}</span></td>
+          <td>{% if r.ocr_confidence != None %}{{ r.ocr_confidence }}{% else %}—{% endif %}</td>
+          <td>{{ r.reason }}</td>
+          <td>{{ r.source|default:"—" }}</td>
+        </tr>
+        {% empty %}
+        <tr><td colspan="8"><div class="empty-state"><h3>لا توجد مكونات للمطابقة</h3></div></td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<div class="actions panel">
+  {% if user.is_authenticated %}
+    {% if assessment.product_status != "SAFE" %}
+      <a class="btn btn-danger" href="{{ report_url }}"><i data-lucide="flag"></i> إبلاغ الجهة الرقابية</a>
+    {% else %}
+      <a class="btn btn-secondary" href="{{ report_url }}">إبلاغ يدوي</a>
+    {% endif %}
+  {% else %}
+    <a class="btn btn-danger" href="{{ login_for_report }}"><i data-lucide="log-in"></i> سجّل الدخول للإبلاغ</a>
+    <span class="muted small">التحقق متاح للزائر — الإبلاغ يتطلب حسابًا.</span>
+  {% endif %}
+  <a class="btn btn-primary" href="{% url 'scans:hub' %}">تحقق جديد</a>
+</div>
+{% endif %}
+
+{% if ocr %}
+<section class="ocr-meta">
+  <strong>بيانات استخراج النص (منفصلة عن قرار السلامة)</strong>
+  <div style="margin-top:0.45rem">
+    ثقة الاستخراج: <strong>{{ ocr.overall_confidence }}</strong>
+    <span class="sep">|</span>
+    زمن المعالجة: {{ ocr.processing_time_ms }}ms
+    <span class="sep">|</span>
+    المحرك: {{ ocr.engine_note }}
+  </div>
+  {% if ocr.raw_text %}
+  <pre style="white-space:pre-wrap;margin:0.75rem 0 0;font-family:var(--font);font-size:0.9rem">{{ ocr.raw_text }}</pre>
+  {% endif %}
+</section>
+{% endif %}
+{% endblock %}

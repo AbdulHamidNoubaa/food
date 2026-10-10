@@ -1,0 +1,31 @@
+{% extends "base.html" %}
+{% block title %}بلاغاتي{% endblock %}
+{% block topbar_title %}بلاغاتي{% endblock %}
+{% block content %}
+<div class="page-header">
+  <div>
+    <h1>بلاغاتي</h1>
+    <p class="lead">تتبع حالة البلاغات التي قدّمتها للجهة الرقابية.</p>
+  </div>
+</div>
+<section class="card">
+  <div class="table-wrap">
+    <table class="table">
+      <thead><tr><th>التاريخ</th><th>المنتج</th><th>الحالة</th><th>الأولوية</th><th></th></tr></thead>
+      <tbody>
+        {% for c in complaints %}
+        <tr>
+          <td>{{ c.created_at|date:"Y-m-d" }}</td>
+          <td>{{ c.product.name_ar|default:"—" }}</td>
+          <td>{% include "partials/status_badge.html" with code=c.status label=c.get_status_display %}</td>
+          <td>{% include "partials/status_badge.html" with code=c.severity_level label=c.get_severity_level_display %}</td>
+          <td><a href="{% url 'complaints:detail' c.id %}">تتبع</a></td>
+        </tr>
+        {% empty %}
+        <tr><td colspan="5"><div class="empty-state"><h3>لا توجد بلاغات</h3><p>يمكنك إنشاء بلاغ من صفحة نتيجة التحقق عند اكتشاف مخالفة.</p></div></td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</section>
+{% endblock %}

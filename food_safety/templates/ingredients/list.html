@@ -1,0 +1,47 @@
+{% extends "base.html" %}
+{% block title %}قاعدة المكونات{% endblock %}
+{% block topbar_title %}قاعدة المكونات{% endblock %}
+{% block content %}
+<div class="page-header">
+  <div>
+    <h1>{{ page_heading|default:"قاعدة المكونات والمضافات" }}</h1>
+    <p class="lead">مرجع المكونات المستخدم في المطابقة ومحرك القواعد.</p>
+  </div>
+  <a class="btn btn-secondary" href="{% url 'ingredients:banned' %}">عرض المحظورة فقط</a>
+</div>
+<section class="card panel">
+  <form method="get" class="filters">
+    <div><label>بحث</label><input type="search" name="q" value="{{ q }}"></div>
+    <div>
+      <label>الحالة</label>
+      <select name="status">
+        <option value="">الكل</option>
+        {% for v,l in status_choices %}<option value="{{ v }}" {% if status == v %}selected{% endif %}>{{ l }}</option>{% endfor %}
+      </select>
+    </div>
+    <div></div>
+    <div><button class="btn btn-primary" type="submit">تصفية</button></div>
+  </form>
+</section>
+<section class="card">
+  <div class="table-wrap">
+    <table class="table">
+      <thead><tr><th>E</th><th>عربي</th><th>English</th><th>الحالة</th><th>الخطورة</th><th></th></tr></thead>
+      <tbody>
+        {% for i in page_obj %}
+        <tr>
+          <td>{{ i.e_number|default:"—" }}</td>
+          <td>{{ i.name_ar }}</td>
+          <td>{{ i.name_en }}</td>
+          <td>{{ i.get_safety_status_display }}</td>
+          <td>{{ i.get_risk_level_display }}</td>
+          <td><a href="{% url 'ingredients:detail' i.id %}">تفاصيل</a></td>
+        </tr>
+        {% empty %}
+        <tr><td colspan="6"><div class="empty-state"><h3>لا نتائج</h3></div></td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</section>
+{% endblock %}

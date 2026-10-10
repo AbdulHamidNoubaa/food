@@ -1,0 +1,110 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{% block title %}{{ app_name_ar }}{% endblock %}</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="{% static 'css/design-system.css' %}">
+  {% block extra_head %}{% endblock %}
+</head>
+<body class="{% block body_class %}{% endblock %}">
+{% if use_app_shell %}
+  <div class="sidebar-backdrop" id="sidebarBackdrop"></div>
+  <div class="app-shell">
+    <aside class="sidebar" id="sidebar">
+      <a class="sidebar-brand" href="{% url 'core:home' %}">
+        <span class="brand-mark" aria-hidden="true"><i data-lucide="shield-check"></i></span>
+        <span class="brand-text">
+          <strong>{{ app_name_ar }}</strong>
+          <span>رقابة · سلامة · امتثال</span>
+        </span>
+      </a>
+      <nav class="sidebar-nav" aria-label="القائمة الرئيسية">
+        <div class="nav-section">
+          <div class="nav-section-title">القائمة</div>
+          {% for item in nav_items %}
+            <a class="nav-link {% if item.active %}active{% endif %}" href="{{ item.url }}">
+              <i data-lucide="{{ item.icon }}"></i>
+              <span>{{ item.label }}</span>
+              {% if item.url_name == 'notifications:list' and unread_notifications %}
+                <span class="nav-badge">{{ unread_notifications }}</span>
+              {% endif %}
+            </a>
+          {% endfor %}
+        </div>
+      </nav>
+      <div class="sidebar-footer">منصة مؤسسية للتحقق من سلامة المنتجات الغذائية</div>
+    </aside>
+    <div class="main-wrap">
+      <header class="topbar">
+        <div class="topbar-left">
+          <button type="button" class="menu-toggle" id="menuToggle" aria-label="القائمة"><i data-lucide="menu"></i></button>
+          <div class="page-title-top">{% block topbar_title %}{{ app_name_ar }}{% endblock %}</div>
+        </div>
+        <div class="topbar-right">
+          <a class="icon-btn" href="{% url 'notifications:list' %}" title="الإشعارات" aria-label="الإشعارات">
+            <i data-lucide="bell"></i>
+            {% if unread_notifications %}<span class="dot"></span>{% endif %}
+          </a>
+          <div class="user-chip">
+            <span class="user-avatar">{{ user.full_name|default:user.username|make_list|first|upper }}</span>
+            <span class="user-meta">
+              <strong>{{ user.full_name|default:user.username }}</strong>
+              <span>{{ user.get_role_display }}</span>
+            </span>
+          </div>
+          <form method="post" action="{% url 'accounts:logout' %}">
+            {% csrf_token %}
+            <button class="btn btn-secondary btn-sm" type="submit">خروج</button>
+          </form>
+        </div>
+      </header>
+{% else %}
+  <header class="topbar" style="position:sticky;top:0">
+    <div class="topbar-left" style="padding-inline-start:1rem">
+      <a class="sidebar-brand" href="{% url 'core:home' %}" style="padding:0;border:0;color:var(--fs-navy)">
+        <span class="brand-mark"><i data-lucide="shield-check"></i></span>
+        <span class="brand-text">
+          <strong>{{ app_name_ar }}</strong>
+          <span>خدمة التحقق العامة</span>
+        </span>
+      </a>
+    </div>
+    <div class="topbar-right" style="padding-inline-end:1rem">
+      <a class="btn btn-secondary btn-sm" href="{% url 'accounts:login' %}">دخول</a>
+      <a class="btn btn-primary btn-sm" href="{% url 'accounts:register' %}">إنشاء حساب زائر</a>
+    </div>
+  </header>
+  <div class="main-wrap" style="margin-inline-start:0">
+{% endif %}
+
+      <main class="content"{% if not use_app_shell %} style="max-width:1100px;margin:0 auto"{% endif %}>
+        {% if messages %}
+          <ul class="messages">
+            {% for message in messages %}
+              <li class="{{ message.tags }}">{{ message }}</li>
+            {% endfor %}
+          </ul>
+        {% endif %}
+        {% block content %}{% endblock %}
+      </main>
+
+{% if use_app_shell %}
+      <footer class="app-footer">
+        نتيجة السلامة تعتمد على قواعد موثّقة وقابلة للتدقيق. استخراج النص من الصور منفصل تمامًا عن قرار السلامة.
+      </footer>
+    </div>
+  </div>
+{% else %}
+  </div>
+{% endif %}
+
+  <script src="https://unpkg.com/lucide@0.469.0"></script>
+  <script src="{% static 'js/app.js' %}"></script>
+  {% block extra_js %}{% endblock %}
+</body>
+</html>

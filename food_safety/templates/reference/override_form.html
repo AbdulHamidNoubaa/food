@@ -1,0 +1,32 @@
+{% extends "base.html" %}
+{% block title %}{{ page_title }}{% endblock %}
+{% block topbar_title %}{{ page_title }}{% endblock %}
+{% block content %}
+<div class="page-header">
+  <div>
+    <h1>{{ page_title }}</h1>
+    <p class="lead">يُربط التصنيف المحلي بالسجل المرجعي دون إنشاء نسخة مكررة من هوية المادة.</p>
+  </div>
+  <a class="btn btn-secondary" href="{% url 'reference:detail' additive.id %}">إلغاء</a>
+</div>
+
+<section class="card panel">
+  <div class="alert alert-info">
+    <strong>المادة المرجعية:</strong> {{ additive.e_number|default:additive.ins_number }} — {{ additive.name_en }}
+    {% if additive.name_ar %} ({{ additive.name_ar }}){% endif %}
+  </div>
+  <form method="post" enctype="multipart/form-data" class="form-grid">
+    {% csrf_token %}
+    {% for field in form %}
+    <div>
+      <label for="{{ field.id_for_label }}">{{ field.label }}</label>
+      {{ field }}
+      {{ field.errors }}
+    </div>
+    {% endfor %}
+    <div class="actions">
+      <button class="btn btn-primary" type="submit"><i data-lucide="save"></i> حفظ التصنيف المحلي</button>
+    </div>
+  </form>
+</section>
+{% endblock %}

@@ -1,0 +1,69 @@
+{% extends "base.html" %}
+{% block title %}البلاغات{% endblock %}
+{% block topbar_title %}البلاغات{% endblock %}
+{% block content %}
+<div class="page-header">
+  <div>
+    <h1>إدارة البلاغات</h1>
+    <p class="lead">متابعة البلاغات الرقابية حسب الحالة والأولوية والمسؤول.</p>
+  </div>
+  <a class="btn btn-teal" href="{% url 'dashboard:export_csv' %}"><i data-lucide="download"></i> تصدير</a>
+</div>
+
+<section class="card panel">
+  <form method="get" class="filters">
+    <div><label>بحث</label><input type="search" name="q" value="{{ filters.q }}" placeholder="منتج / محل / وصف"></div>
+    <div>
+      <label>الحالة</label>
+      <select name="status">
+        <option value="">الكل</option>
+        {% for v,l in status_choices %}<option value="{{ v }}" {% if filters.status == v %}selected{% endif %}>{{ l }}</option>{% endfor %}
+      </select>
+    </div>
+    <div>
+      <label>الأولوية</label>
+      <select name="severity">
+        <option value="">الكل</option>
+        {% for v,l in severity_choices %}<option value="{{ v }}" {% if filters.severity == v %}selected{% endif %}>{{ l }}</option>{% endfor %}
+      </select>
+    </div>
+    <div><button class="btn btn-primary" type="submit">تصفية</button></div>
+  </form>
+</section>
+
+<section class="card">
+  <div class="table-wrap">
+    <table class="table">
+      <thead>
+        <tr>
+          <th>رقم البلاغ</th><th>المنتج</th><th>الموقع</th><th>التاريخ</th>
+          <th>الحالة</th><th>الأولوية</th><th>المسؤول</th><th></th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for c in page_obj %}
+        <tr>
+          <td>{{ c.id|truncatechars:10 }}</td>
+          <td>{{ c.product.name_ar|default:"—" }}</td>
+          <td>{{ c.store.name|default:"—" }}</td>
+          <td>{{ c.created_at|date:"Y-m-d H:i" }}</td>
+          <td>{% include "partials/status_badge.html" with code=c.status label=c.get_status_display %}</td>
+          <td>{% include "partials/status_badge.html" with code=c.severity_level label=c.get_severity_level_display %}</td>
+          <td>{{ c.assigned_inspector|default:"—" }}</td>
+          <td><a class="btn btn-secondary btn-sm" href="{% url 'complaints:detail' c.id %}">تفاصيل</a></td>
+        </tr>
+        {% empty %}
+        <tr><td colspan="8"><div class="empty-state"><h3>لا توجد بلاغات حاليًا</h3><p>ستظهر البلاغات هنا عند استلامها من المستهلكين أو المفتشين.</p></div></td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% if page_obj.has_other_pages %}
+  <div class="actions" style="margin-top:1rem">
+    {% if page_obj.has_previous %}<a class="btn btn-secondary btn-sm" href="?page={{ page_obj.previous_page_number }}&q={{ filters.q }}&status={{ filters.status }}&severity={{ filters.severity }}">السابق</a>{% endif %}
+    <span class="muted small">صفحة {{ page_obj.number }} من {{ page_obj.paginator.num_pages }}</span>
+    {% if page_obj.has_next %}<a class="btn btn-secondary btn-sm" href="?page={{ page_obj.next_page_number }}&q={{ filters.q }}&status={{ filters.status }}&severity={{ filters.severity }}">التالي</a>{% endif %}
+  </div>
+  {% endif %}
+</section>
+{% endblock %}

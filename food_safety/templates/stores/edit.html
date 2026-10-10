@@ -1,0 +1,66 @@
+﻿{% extends "base.html" %}
+{% load static %}
+{% block title %}{{ page_title }}{% endblock %}
+{% block topbar_title %}{{ page_title }}{% endblock %}
+{% block extra_head %}
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+{% endblock %}
+{% block content %}
+<div class="page-header">
+  <div>
+    <h1>{{ page_title }}</h1>
+    <p class="lead">تصحيح بيانات المنشأة أو موقعها. الحالة الافتراضية للمنشآت الجديدة ليست «معتمدة» تلقائيًا.</p>
+  </div>
+  <a class="btn btn-secondary" href="{% url 'stores:detail' store.id %}">إلغاء</a>
+</div>
+<section class="card panel" style="max-width:860px">
+  <form method="post" class="form-grid" id="storeEditForm">
+    {% csrf_token %}
+    {% for field in form %}
+      {% if field.is_hidden %}
+        {{ field }}
+      {% else %}
+      <div {% if field.name == 'custom_type' %}id="wrapCustomType"{% endif %}>
+        <label for="{{ field.id_for_label }}">{{ field.label }}</label>
+        {{ field }}
+        {{ field.errors }}
+      </div>
+      {% endif %}
+    {% endfor %}
+    <div>
+      <button type="button" class="btn btn-teal btn-sm" id="btnGps"><i data-lucide="navigation"></i> موقعي الحالي</button>
+      <div id="map" style="height:280px;margin-top:0.5rem;border-radius:10px"></div>
+      <div class="muted small" id="coords" style="margin-top:0.35rem"></div>
+    </div>
+    <div class="actions">
+      <button class="btn btn-primary" type="submit"><i data-lucide="save"></i> حفظ</button>
+    </div>
+  </form>
+</section>
+{% endblock %}
+{% block extra_js %}
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script src="{% static 'js/map-tiles.js' %}?v=3"></script>
+<script>
+(function(){
+  const lat = document.getElementById('id_latitude');
+  const lng = document.getElementById('id_longitude');
+  const typeSel = document.getElementById('id_establishment_type');
+  const wrap = document.getElementById('wrapCustomType');
+  function syncOther(){ if (wrap) wrap.style.display = typeSel && typeSel.value === 'OTHER' ? '' : 'none'; }
+  typeSel?.addEventListener('change', syncOther); syncOther();
+  const startLat = parseFloat(lat.value) || 32.8872;
+  const startLng = parseFloat(lng.value) || 13.1913;
+  const map = L.map('map').setView([startLat, startLng], lat.value ? 16 : 12);
+  FSMapTiles.addWithSwitcher(map);
+  const marker = L.marker([startLat, startLng], { draggable: true }).addTo(map);
+  function set(a,b){ lat.value=a; lng.value=b; document.getElementById('coords').textContent='Latitude: '+Number(a).toFixed(6)+' · Longitude: '+Number(b).toFixed(6); marker.setLatLng([a,b]); map.setView([a,b],16); }
+  marker.on('dragend', function(){ const p=marker.getLatLng(); set(p.lat,p.lng); });
+  map.on('click', function(e){ set(e.latlng.lat, e.latlng.lng); });
+  if (lat.value) set(startLat, startLng);
+  document.getElementById('btnGps')?.addEventListener('click', function(){
+    navigator.geolocation?.getCurrentPosition(function(pos){ set(pos.coords.latitude, pos.coords.longitude); });
+  });
+})();
+</script>
+{% endblock %}

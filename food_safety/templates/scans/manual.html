@@ -1,0 +1,32 @@
+{% extends "base.html" %}
+{% block title %}إدخال المكونات{% endblock %}
+{% block topbar_title %}إدخال قائمة المكونات{% endblock %}
+{% block content %}
+<div class="page-header">
+  <div>
+    <h1>إدخال قائمة المكونات</h1>
+    <p class="lead">أدخل المكونات مفصولة بفاصلة ليتم مطابقتها مباشرة مع قاعدة البيانات.</p>
+  </div>
+</div>
+<section class="card" style="max-width:720px">
+  <form method="post" class="form-grid">
+    {% csrf_token %}
+    {% for field in form %}
+      <div>
+        {% if not field.is_hidden %}
+          <label for="{{ field.id_for_label }}">{{ field.label }}</label>
+        {% endif %}
+        {{ field }}
+        {{ field.errors }}
+      </div>
+    {% endfor %}
+    <div class="actions">
+      <button class="btn btn-primary" type="submit">تقييم السلامة</button>
+      <a class="btn btn-secondary" href="{% url 'scans:hub' %}">رجوع</a>
+    </div>
+  </form>
+</section>
+{% endblock %}
+{% block extra_js %}
+<script>document.querySelector('[name=location_consent]')?.setAttribute('data-geo-consent','');</script>
+{% endblock %}

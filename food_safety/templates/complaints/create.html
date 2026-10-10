@@ -1,0 +1,303 @@
+﻿{% extends "base.html" %}
+{% load static %}
+{% block title %}تقديم بلاغ{% endblock %}
+{% block topbar_title %}تقديم بلاغ{% endblock %}
+{% block extra_head %}
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+<style>
+  .est-mode { display:flex; gap:1rem; flex-wrap:wrap; margin:0.5rem 0 1rem; }
+  .est-mode label { display:flex; align-items:center; gap:0.4rem; font-weight:600; }
+  #storePickerResults, #nearbyList, #dupList { list-style:none; padding:0; margin:0.5rem 0 0; }
+  #storePickerResults li, #nearbyList li, #dupList li {
+    border:1px solid var(--line); border-radius:8px; padding:0.65rem 0.75rem; margin-bottom:0.45rem;
+    cursor:pointer; background:#fff;
+  }
+  #storePickerResults li:hover, #nearbyList li:hover, #dupList li:hover,
+  #storePickerResults li.selected, #nearbyList li.selected { border-color:var(--fs-teal,#0d9488); background:#F0FAF8; }
+  #estMap { height:280px; border-radius:10px; border:1px solid var(--line); margin-top:0.5rem; }
+  .coords-readout { font-family:ui-monospace,monospace; font-size:0.85rem; }
+</style>
+{% endblock %}
+{% block content %}
+<div class="page-header">
+  <div>
+    <h1>بلاغ رسمي للجهة الرقابية</h1>
+    <p class="lead">اربط البلاغ بمنشأة غذائية — اختر منشأة موجودة أو أضفها لأول مرة لتظهر للمستخدمين لاحقًا.</p>
+  </div>
+</div>
+{% if assessment %}
+<div class="alert alert-info">
+  نتيجة النظام الحالية:
+  {% include "partials/status_badge.html" with code=assessment.product_status label=assessment.get_product_status_display %}
+  <div class="small" style="margin-top:0.45rem">{{ assessment.summary_reason }}</div>
+</div>
+{% endif %}
+
+<section class="card panel" style="max-width:860px">
+  <form method="post" enctype="multipart/form-data" class="form-grid" id="complaintForm">
+    {% csrf_token %}
+    {{ form.store }}
+    {{ form.latitude }}
+    {{ form.longitude }}
+    {{ form.store_latitude }}
+    {{ form.store_longitude }}
+    {{ form.force_create_store }}
+
+    <div>
+      <strong>المنشأة الغذائية</strong>
+      <div class="est-mode">{{ form.establishment_mode }}</div>
+      {{ form.establishment_mode.errors }}
+    </div>
+
+    <div id="panelExisting">
+      <label for="storeSearch">بحث عن منشأة موجودة</label>
+      <input type="search" id="storeSearch" placeholder="اكتب اسم المنشأة…">
+      <ul id="storePickerResults"></ul>
+      <div id="selectedStoreLabel" class="alert alert-info" style="display:none;margin-top:0.75rem"></div>
+
+      <div style="margin-top:1rem">
+        <strong>المنشآت القريبة من موقعك</strong>
+        <p class="muted small">يُفضّل السماح بالموقع لعرض أقرب المنشآت.</p>
+        <button type="button" class="btn btn-teal btn-sm" id="btnNearby"><i data-lucide="locate"></i> تحديث القريبة</button>
+        <ul id="nearbyList"></ul>
+      </div>
+      {{ form.store.errors }}
+    </div>
+
+    <div id="panelNew" style="display:none">
+      <div class="form-grid two">
+        <div>
+          <label for="{{ form.new_name.id_for_label }}">{{ form.new_name.label }}</label>
+          {{ form.new_name }}
+          {{ form.new_name.errors }}
+        </div>
+        <div>
+          <label for="{{ form.new_type.id_for_label }}">{{ form.new_type.label }}</label>
+          {{ form.new_type }}
+          {{ form.new_type.errors }}
+        </div>
+        <div id="wrapTypeOther" style="display:none;grid-column:1 / -1">
+          <label for="{{ form.new_type_other.id_for_label }}">{{ form.new_type_other.label }}</label>
+          {{ form.new_type_other }}
+          {{ form.new_type_other.errors }}
+        </div>
+        <div>
+          <label for="{{ form.new_city.id_for_label }}">{{ form.new_city.label }} <span class="muted">(اختياري)</span></label>
+          {{ form.new_city }}
+        </div>
+        <div>
+          <label for="{{ form.new_district.id_for_label }}">{{ form.new_district.label }} <span class="muted">(اختياري)</span></label>
+          {{ form.new_district }}
+        </div>
+        <div>
+          <label for="{{ form.new_street.id_for_label }}">{{ form.new_street.label }} <span class="muted">(اختياري)</span></label>
+          {{ form.new_street }}
+        </div>
+        <div>
+          <label for="{{ form.new_location_description.id_for_label }}">{{ form.new_location_description.label }} <span class="muted">(اختياري)</span></label>
+          {{ form.new_location_description }}
+        </div>
+      </div>
+
+      <div style="margin-top:0.75rem">
+        <label>{{ form.location_consent }} {{ form.location_consent.label }}</label>
+      </div>
+      <p class="muted small">أو حرّك العلامة على الخريطة يدويًا — GPS غير إلزامي.</p>
+      <div class="actions" style="margin:0.35rem 0">
+        <button type="button" class="btn btn-teal btn-sm" id="btnGps"><i data-lucide="navigation"></i> استخدام موقعي</button>
+      </div>
+      <div id="estMap"></div>
+      <div class="coords-readout muted" id="coordsReadout" style="margin-top:0.35rem">—</div>
+      {{ form.store_latitude.errors }}
+
+      {% if form.non_field_errors or duplicate_candidates %}
+      <div class="alert" style="margin-top:0.85rem;border-color:#c9a227">
+        <strong>يبدو أن هذه المنشأة موجودة بالفعل.</strong>
+        {{ form.non_field_errors }}
+        <ul id="dupList">
+          {% for d in duplicate_candidates %}
+          <li data-id="{{ d.store.id }}" class="js-pick-dup">
+            <strong>{{ d.store.name }}</strong> — {{ d.store.type_display }}
+            {% if d.distance_m != None %}<span class="muted"> · {{ d.distance_m }} م</span>{% endif %}
+          </li>
+          {% endfor %}
+        </ul>
+        <button type="submit" class="btn btn-secondary btn-sm" id="btnForceCreate" style="margin-top:0.5rem">تأكيد إنشاء منشأة جديدة رغم التشابه</button>
+      </div>
+      {% endif %}
+    </div>
+
+    <div>
+      <label for="{{ form.description.id_for_label }}">{{ form.description.label }}</label>
+      {{ form.description }}
+      {{ form.description.errors }}
+    </div>
+    <div>
+      <label for="{{ form.attachment.id_for_label }}">{{ form.attachment.label }}</label>
+      {{ form.attachment }}
+    </div>
+
+    <div class="actions">
+      <button class="btn btn-danger" type="submit"><i data-lucide="send"></i> إرسال البلاغ</button>
+      <a class="btn btn-secondary" href="{% url 'scans:result' scan.id %}">رجوع للنتيجة</a>
+    </div>
+  </form>
+</section>
+{% endblock %}
+{% block extra_js %}
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script src="{% static 'js/map-tiles.js' %}?v=3"></script>
+<script>
+(function(){
+  const form = document.getElementById('complaintForm');
+  const storeId = document.getElementById('id_store');
+  const storeLat = document.getElementById('id_store_latitude');
+  const storeLng = document.getElementById('id_store_longitude');
+  const complaintLat = document.getElementById('id_latitude');
+  const complaintLng = document.getElementById('id_longitude');
+  const forceCreate = document.getElementById('id_force_create_store');
+  const panelEx = document.getElementById('panelExisting');
+  const panelNew = document.getElementById('panelNew');
+  const typeSel = document.getElementById('id_new_type');
+  const wrapOther = document.getElementById('wrapTypeOther');
+  const selectedLabel = document.getElementById('selectedStoreLabel');
+  const searchUrl = "{% url 'stores:api_search' %}";
+  const nearbyUrl = "{% url 'stores:api_nearby' %}";
+  let map, marker;
+
+  function mode() {
+    const checked = form.querySelector('input[name=establishment_mode]:checked');
+    return checked ? checked.value : 'existing';
+  }
+  function syncMode() {
+    const m = mode();
+    panelEx.style.display = m === 'existing' ? '' : 'none';
+    panelNew.style.display = m === 'new' ? '' : 'none';
+    if (m === 'new') setTimeout(initMap, 50);
+  }
+  function syncOther() {
+    wrapOther.style.display = typeSel && typeSel.value === 'OTHER' ? '' : 'none';
+  }
+  function setCoords(lat, lng) {
+    if (lat == null || lng == null) return;
+    storeLat.value = lat;
+    storeLng.value = lng;
+    complaintLat.value = lat;
+    complaintLng.value = lng;
+    const el = document.getElementById('coordsReadout');
+    if (el) el.textContent = 'Latitude: ' + Number(lat).toFixed(6) + ' · Longitude: ' + Number(lng).toFixed(6);
+    if (marker) marker.setLatLng([lat, lng]);
+    if (map) map.setView([lat, lng], 16);
+  }
+  function initMap() {
+    if (map) { map.invalidateSize(); return; }
+    const startLat = parseFloat(storeLat.value) || 32.8872;
+    const startLng = parseFloat(storeLng.value) || 13.1913;
+    map = L.map('estMap').setView([startLat, startLng], storeLat.value ? 16 : 12);
+    FSMapTiles.addDefault(map);
+    marker = L.marker([startLat, startLng], { draggable: true }).addTo(map);
+    marker.on('dragend', function(){
+      const p = marker.getLatLng();
+      setCoords(p.lat, p.lng);
+    });
+    map.on('click', function(e){ setCoords(e.latlng.lat, e.latlng.lng); });
+    if (storeLat.value) setCoords(startLat, startLng);
+  }
+  function selectStore(item) {
+    storeId.value = item.id;
+    selectedLabel.style.display = '';
+    selectedLabel.innerHTML = '<strong>المنشأة المختارة:</strong> ' + item.name +
+      ' <span class="muted">(' + (item.type || '') + ')</span>';
+    if (item.lat != null) setCoords(item.lat, item.lng);
+    form.querySelectorAll('#storePickerResults li, #nearbyList li, #dupList li').forEach(function(li){
+      li.classList.toggle('selected', li.dataset.id === item.id);
+    });
+    // switch to existing mode when picking duplicate
+    const ex = form.querySelector('input[name=establishment_mode][value=existing]');
+    if (ex) { ex.checked = true; syncMode(); }
+  }
+  function renderList(ul, results, withDistance) {
+    ul.innerHTML = '';
+    if (!results.length) {
+      ul.innerHTML = '<li class="muted" style="cursor:default">لا نتائج</li>';
+      return;
+    }
+    results.forEach(function(item){
+      const li = document.createElement('li');
+      li.dataset.id = item.id;
+      let dist = '';
+      if (withDistance && item.distance_m != null) dist = ' — ' + item.distance_m + ' م';
+      li.innerHTML = '<strong>' + item.name + '</strong> — ' + (item.type || '') +
+        '<span class="muted">' + dist + (item.city ? ' · ' + item.city : '') + '</span>';
+      li.addEventListener('click', function(){ selectStore(item); });
+      ul.appendChild(li);
+    });
+  }
+  let searchTimer;
+  document.getElementById('storeSearch')?.addEventListener('input', function(e){
+    clearTimeout(searchTimer);
+    const q = e.target.value.trim();
+    searchTimer = setTimeout(async function(){
+      if (!q) { document.getElementById('storePickerResults').innerHTML = ''; return; }
+      const resp = await fetch(searchUrl + '?q=' + encodeURIComponent(q));
+      const data = await resp.json();
+      renderList(document.getElementById('storePickerResults'), data.results || [], false);
+    }, 250);
+  });
+  function loadNearby(lat, lng) {
+    fetch(nearbyUrl + '?lat=' + lat + '&lng=' + lng + '&radius_m=2000')
+      .then(r => r.json())
+      .then(data => renderList(document.getElementById('nearbyList'), data.results || [], true));
+  }
+  document.getElementById('btnNearby')?.addEventListener('click', function(){
+    if (!navigator.geolocation) return;
+    navigator.geolocation.getCurrentPosition(function(pos){
+      setCoords(pos.coords.latitude, pos.coords.longitude);
+      loadNearby(pos.coords.latitude, pos.coords.longitude);
+    });
+  });
+  document.getElementById('btnGps')?.addEventListener('click', function(){
+    if (!navigator.geolocation) return;
+    navigator.geolocation.getCurrentPosition(function(pos){
+      setCoords(pos.coords.latitude, pos.coords.longitude);
+    });
+  });
+  document.getElementById('id_location_consent')?.addEventListener('change', function(e){
+    if (e.target.checked && navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(function(pos){
+        setCoords(pos.coords.latitude, pos.coords.longitude);
+      });
+    }
+  });
+  document.getElementById('btnForceCreate')?.addEventListener('click', function(){
+    forceCreate.value = 'on';
+  });
+  document.querySelectorAll('.js-pick-dup').forEach(function(li){
+    li.addEventListener('click', function(){
+      selectStore({ id: li.dataset.id, name: li.querySelector('strong')?.textContent || '', type: '' });
+    });
+  });
+
+  form.querySelectorAll('input[name=establishment_mode]').forEach(function(r){
+    r.addEventListener('change', syncMode);
+  });
+  typeSel?.addEventListener('change', syncOther);
+  syncMode();
+  syncOther();
+
+  // Prefill selected store label
+  {% if form.store.value %}
+  selectedLabel.style.display = '';
+  selectedLabel.innerHTML = '<strong>منشأة مرتبطة بالفحص.</strong> يمكنك البحث لتغييرها.';
+  {% endif %}
+
+  // Auto nearby on load
+  if (navigator.geolocation) {
+    navigator.geolocation.getCurrentPosition(function(pos){
+      if (!storeLat.value) setCoords(pos.coords.latitude, pos.coords.longitude);
+      loadNearby(pos.coords.latitude, pos.coords.longitude);
+    }, function(){}, { timeout: 5000 });
+  }
+})();
+</script>
+{% endblock %}

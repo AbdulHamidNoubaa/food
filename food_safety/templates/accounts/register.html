@@ -1,0 +1,22 @@
+{% extends "base_auth.html" %}
+{% block title %}إنشاء حساب زائر{% endblock %}
+{% block auth_content %}
+<h1 style="margin-bottom:0.35rem">إنشاء حساب زائر</h1>
+<p class="muted" style="margin-bottom:1.25rem">
+  التسجيل الذاتي متاح لدور <strong>زائر</strong> فقط لمتابعة البلاغات.
+  أدوار المفتش والحرس البلدي والأخصائي والمدير تُنشأ بواسطة مدير النظام.
+</p>
+<form method="post" class="form-grid">
+  {% csrf_token %}
+  {% for field in form %}
+    <div>
+      <label for="{{ field.id_for_label }}">{{ field.label }}</label>
+      {{ field }}
+      {% if field.help_text %}<div class="help">{{ field.help_text }}</div>{% endif %}
+      {{ field.errors }}
+    </div>
+  {% endfor %}
+  <button class="btn btn-primary btn-block" type="submit">إنشاء حساب زائر</button>
+</form>
+<p class="muted small" style="margin-top:1rem"><a href="{% url 'accounts:login' %}">لديك حساب؟ سجّل الدخول</a></p>
+{% endblock %}

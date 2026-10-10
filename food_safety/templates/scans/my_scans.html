@@ -1,0 +1,38 @@
+{% extends "base.html" %}
+{% block title %}سجل التحقق{% endblock %}
+{% block topbar_title %}سجل التحقق{% endblock %}
+{% block content %}
+<div class="page-header">
+  <div>
+    <h1>سجل عمليات التحقق</h1>
+    <p class="lead">عمليات التحقق التي أجريتها على المنتجات.</p>
+  </div>
+  <a class="btn btn-primary" href="{% url 'scans:hub' %}">تحقق جديد</a>
+</div>
+<section class="card">
+  <div class="table-wrap">
+    <table class="table">
+      <thead>
+        <tr><th>التاريخ</th><th>الطريقة</th><th>المنتج</th><th>الحالة</th><th></th></tr>
+      </thead>
+      <tbody>
+        {% for s in scans %}
+        <tr>
+          <td>{{ s.created_at|date:"Y-m-d H:i" }}</td>
+          <td>{{ s.get_scan_method_display }}</td>
+          <td>{{ s.product.name_ar|default:s.query_text|default:"—" }}</td>
+          <td>
+            {% if s.assessment %}
+              {% include "partials/status_badge.html" with code=s.assessment.product_status label=s.assessment.get_product_status_display %}
+            {% else %}—{% endif %}
+          </td>
+          <td><a href="{% url 'scans:result' s.id %}">عرض</a></td>
+        </tr>
+        {% empty %}
+        <tr><td colspan="5"><div class="empty-state"><h3>لا توجد عمليات تحقق بعد</h3><p><a class="btn btn-primary" href="{% url 'scans:hub' %}">ابدأ الآن</a></p></div></td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</section>
+{% endblock %}

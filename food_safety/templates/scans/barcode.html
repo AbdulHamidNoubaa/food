@@ -1,0 +1,37 @@
+{% extends "base.html" %}
+{% block title %}التحقق بالباركود{% endblock %}
+{% block topbar_title %}التحقق بالباركود{% endblock %}
+{% block content %}
+<div class="page-header">
+  <div>
+    <h1>التحقق بالباركود</h1>
+    <p class="lead">استعلام مباشر من قاعدة المنتجات — دون استخراج نص من الصور.</p>
+  </div>
+</div>
+<section class="card" style="max-width:640px">
+  <form method="post" class="form-grid">
+    {% csrf_token %}
+    {% for field in form %}
+      <div>
+        {% if not field.is_hidden %}
+          <label for="{{ field.id_for_label }}">{{ field.label }}</label>
+        {% endif %}
+        {{ field }}
+        {% if field.name == 'location_consent' %}
+          <div class="help">يُستخدم الموقع فقط لربط الفحص بالمحل وتصعيد البلاغ عند الحاجة.</div>
+        {% endif %}
+        {{ field.errors }}
+      </div>
+    {% endfor %}
+    <div class="actions">
+      <button class="btn btn-primary" type="submit" data-geo-consent-form><i data-lucide="shield-check"></i> تحقق الآن</button>
+      <a class="btn btn-secondary" href="{% url 'scans:hub' %}">رجوع</a>
+    </div>
+  </form>
+</section>
+{% endblock %}
+{% block extra_js %}
+<script>
+document.querySelector('[name=location_consent]')?.setAttribute('data-geo-consent','');
+</script>
+{% endblock %}

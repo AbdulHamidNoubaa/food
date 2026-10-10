@@ -1,0 +1,73 @@
+{% extends "base.html" %}
+{% block title %}الرئيسية — {{ app_name_ar }}{% endblock %}
+{% block topbar_title %}تحقق من سلامة المنتج{% endblock %}
+{% block content %}
+<div class="page-header">
+  <div>
+    <h1>تحقق من سلامة المنتج</h1>
+    <p class="lead">يمكنك التحقق كزائر دون حساب. تسجيل الدخول مطلوب فقط عند رغبتك في تقديم بلاغ للجهة الرقابية.</p>
+  </div>
+  <div class="actions">
+    <a class="btn btn-primary" href="{% url 'scans:hub' %}"><i data-lucide="scan-barcode"></i> بدء التحقق</a>
+  </div>
+</div>
+
+<div class="method-grid panel">
+  <a class="method-card" href="{% url 'scans:barcode' %}">
+    <span class="method-icon"><i data-lucide="scan-barcode"></i></span>
+    <h3>الباركود</h3>
+    <p>مسح أو إدخال رمز المنتج واسترجاع بياناته من قاعدة البيانات مباشرة.</p>
+  </a>
+  <a class="method-card" href="{% url 'scans:search' %}">
+    <span class="method-icon"><i data-lucide="search"></i></span>
+    <h3>بيانات المنتج</h3>
+    <p>البحث بالاسم أو العلامة التجارية أو رقم المادة المضافة.</p>
+  </a>
+  <a class="method-card" href="{% url 'scans:image' %}">
+    <span class="method-icon"><i data-lucide="image"></i></span>
+    <h3>تحليل بيانات الملصق</h3>
+    <p>رفع صورة قائمة المكونات لاستخراج النص ثم مطابقته مع القواعد.</p>
+  </a>
+</div>
+
+{% if recent %}
+<section class="card panel">
+  <div class="card-header">
+    <h2 class="card-title">آخر عمليات التحقق</h2>
+    <a class="btn btn-secondary btn-sm" href="{% url 'scans:my_scans' %}">عرض الكل</a>
+  </div>
+  <div class="table-wrap">
+    <table class="table">
+      <thead>
+        <tr><th>التاريخ</th><th>الطريقة</th><th>المنتج</th><th>الحالة</th><th></th></tr>
+      </thead>
+      <tbody>
+        {% for s in recent %}
+        <tr>
+          <td>{{ s.created_at|date:"Y-m-d H:i" }}</td>
+          <td>{{ s.get_scan_method_display }}</td>
+          <td>{{ s.product.name_ar|default:s.query_text|default:"—" }}</td>
+          <td>
+            {% if s.assessment %}
+              {% include "partials/status_badge.html" with code=s.assessment.product_status label=s.assessment.get_product_status_display %}
+            {% else %}—{% endif %}
+          </td>
+          <td><a href="{% url 'scans:result' s.id %}">التفاصيل</a></td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</section>
+{% elif not user.is_authenticated %}
+<section class="card">
+  <div class="alert alert-info" style="margin:0">
+    <strong>للزائر:</strong> التحقق متاح مباشرة من البطاقات أعلاه.
+    <div class="small" style="margin-top:0.35rem">
+      للإبلاغ عن مخالفة تحتاج إلى <a href="{% url 'accounts:login' %}">تسجيل الدخول</a>
+       <a href="{% url 'accounts:register' %}">إنشاء حساب زائر</a>.
+    </div>
+  </div>
+</section>
+{% endif %}
+{% endblock %}

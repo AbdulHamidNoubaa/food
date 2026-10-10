@@ -1,0 +1,114 @@
+{% extends "base.html" %}
+{% block title %}المواد والمضافات المحظورة{% endblock %}
+{% block topbar_title %}المواد والمضافات المحظورة{% endblock %}
+{% block content %}
+<div class="page-header">
+  <div>
+    <h1>المواد والمضافات المحظورة</h1>
+    <p class="lead">سجل رقابي رسمي للمواد المحظورة. قرار الحظر يعتمد على البيانات والمراجع التنظيمية — وليس على الصورة.</p>
+  </div>
+  {% if can_manage %}
+  <div class="actions">
+    <a class="btn btn-primary" href="{% url 'ingredients:banned_create' %}"><i data-lucide="plus"></i> إضافة مادة محظورة</a>
+    <a class="btn btn-teal" href="{% url 'reference:catalog' %}"><i data-lucide="book-open"></i> القاعدة المرجعية</a>
+    <a class="btn btn-secondary" href="{% url 'ingredients:unmatched' %}">استعلامات غير مطابقة</a>
+  </div>
+  {% endif %}
+</div>
+
+<section class="card panel">
+  <form method="get" class="filters" style="grid-template-columns:1fr auto auto">
+    <div>
+      <label>بحث</label>
+      <input type="search" name="q" value="{{ q }}" placeholder="E171 / ثاني أكسيد التيتانيوم / Titanium">
+    </div>
+    <div>
+      <label>العرض</label>
+      <select name="show">
+        <option value="active" {% if show == "active" %}selected{% endif %}>محظورة نشطة</option>
+        <option value="all" {% if show == "all" %}selected{% endif %}>الكل (محظور / مراجعة / غير نشط)</option>
+      </select>
+    </div>
+    <div><button class="btn btn-primary" type="submit">بحث</button></div>
+  </form>
+</section>
+
+<section class="card">
+  <div class="table-wrap">
+    <table class="table">
+      <thead>
+        <tr>
+          <th style="width:72px">الصورة</th>
+          <th>E / INS</th>
+          <th>اسم المادة</th>
+          <th>نوع المادة</th>
+          <th>سبب الحظر</th>
+          <th>المصدر</th>
+          <th>الحالة</th>
+          <th>آخر تعديل</th>
+          <th>الإجراءات</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for i in page_obj %}
+        <tr>
+          <td>
+            {% if i.image %}
+              <img src="{{ i.image.url }}" alt="" class="material-thumb">
+            {% else %}
+              <div class="material-placeholder" title="لا توجد صورة">لا توجد صورة</div>
+            {% endif %}
+          </td>
+          <td><strong>{{ i.e_number|default:"—" }}</strong></td>
+          <td>
+            {{ i.name_ar }}
+            <div class="muted small">{{ i.name_en }}</div>
+          </td>
+          <td>{{ i.category|default:"—" }}</td>
+          <td>{{ i.reason|truncatechars:70 }}</td>
+          <td>{{ i.source|truncatechars:36 }}</td>
+          <td>
+            {% if i.safety_status == "PROHIBITED" %}
+              {% include "partials/status_badge.html" with code="UNSAFE" label=i.get_safety_status_display %}
+            {% elif i.safety_status == "UNDER_REVIEW" %}
+              {% include "partials/status_badge.html" with code="UNDER_REVIEW" label=i.get_safety_status_display %}
+            {% else %}
+              {% include "partials/status_badge.html" with code="PENDING" label=i.get_safety_status_display %}
+            {% endif %}
+          </td>
+          <td class="small">{{ i.updated_at|date:"Y-m-d" }}</td>
+          <td class="actions">
+            <a class="btn btn-secondary btn-sm" href="{% url 'ingredients:detail' i.id %}">تفاصيل</a>
+            {% if can_manage %}
+              <a class="btn btn-teal btn-sm" href="{% url 'ingredients:banned_edit' i.id %}">تعديل</a>
+            {% endif %}
+          </td>
+        </tr>
+        {% empty %}
+        <tr>
+          <td colspan="9">
+            <div class="empty-state">
+              <h3>لا توجد مواد محظورة مطابقة</h3>
+              {% if can_manage %}
+              <p><a class="btn btn-primary" href="{% url 'ingredients:banned_create' %}">إضافة مادة جديدة</a></p>
+              {% endif %}
+            </div>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% if page_obj.has_other_pages %}
+  <div class="actions" style="margin-top:1rem">
+    {% if page_obj.has_previous %}
+      <a class="btn btn-secondary btn-sm" href="?page={{ page_obj.previous_page_number }}&q={{ q }}&show={{ show }}">السابق</a>
+    {% endif %}
+    <span class="muted small">صفحة {{ page_obj.number }} / {{ page_obj.paginator.num_pages }}</span>
+    {% if page_obj.has_next %}
+      <a class="btn btn-secondary btn-sm" href="?page={{ page_obj.next_page_number }}&q={{ q }}&show={{ show }}">التالي</a>
+    {% endif %}
+  </div>
+  {% endif %}
+</section>
+{% endblock %}

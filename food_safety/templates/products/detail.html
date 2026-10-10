@@ -1,0 +1,42 @@
+{% extends "base.html" %}
+{% block title %}{{ product.name_ar }}{% endblock %}
+{% block topbar_title %}تفاصيل المنتج{% endblock %}
+{% block content %}
+<div class="page-header">
+  <div>
+    <h1>{{ product.name_ar }}</h1>
+    <p class="lead">{{ product.name_en }} · {{ product.barcode }}</p>
+  </div>
+  <a class="btn btn-primary" href="{% url 'scans:check_product' product.id %}">تشغيل التحقق</a>
+</div>
+<section class="card panel">
+  <div class="grid-2">
+    <div><span class="muted small">العلامة</span><div>{{ product.brand.name_ar|default:"—" }}</div></div>
+    <div><span class="muted small">الشركة المصنّعة</span><div>{{ product.manufacturer|default:"—" }}</div></div>
+    <div><span class="muted small">بلد المنشأ</span><div>{{ product.country_of_origin|default:"—" }}</div></div>
+    <div><span class="muted small">تاريخ الصلاحية</span><div>{{ product.expiry_date|default:"—" }}</div></div>
+    <div><span class="muted small">الفئة</span><div>{{ product.category|default:"—" }}</div></div>
+  </div>
+</section>
+<section class="card">
+  <h2 class="card-title">المكونات المسجّلة</h2>
+  <div class="table-wrap" style="margin-top:0.75rem">
+    <table class="table">
+      <thead><tr><th>#</th><th>المادة</th><th>الكود</th><th>الحالة</th><th>الخطورة</th></tr></thead>
+      <tbody>
+        {% for pi in product.product_ingredients.all %}
+        <tr>
+          <td>{{ pi.position_in_list }}</td>
+          <td><a href="{% url 'ingredients:detail' pi.ingredient.id %}">{{ pi.ingredient.name_ar }}</a></td>
+          <td>{{ pi.ingredient.e_number|default:"—" }}</td>
+          <td>{{ pi.ingredient.get_safety_status_display }}</td>
+          <td>{{ pi.ingredient.get_risk_level_display }}</td>
+        </tr>
+        {% empty %}
+        <tr><td colspan="5"><div class="empty-state"><h3>لا مكونات مسجّلة</h3></div></td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</section>
+{% endblock %}

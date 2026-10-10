@@ -1,0 +1,15 @@
+{% extends "base.html" %}
+{% block title %}منتج غير موجود{% endblock %}
+{% block topbar_title %}نتيجة البحث{% endblock %}
+{% block content %}
+<section class="card empty-state" style="max-width:680px;margin-inline:auto">
+  <span class="method-icon" style="margin:0 auto 1rem"><i data-lucide="package-x"></i></span>
+  <h1>لم يتم العثور على منتج بهذا الرمز</h1>
+  <p>الباركود <strong>{{ barcode }}</strong> غير مسجّل في قاعدة المنتجات الحالية.</p>
+  <div class="actions" style="justify-content:center;margin-top:1.25rem">
+    <a class="btn btn-primary" href="{% url 'scans:manual' %}">إدخال المكونات يدويًا</a>
+    <a class="btn btn-secondary" href="{% url 'scans:image' %}">تحليل بيانات الملصق</a>
+    <a class="btn btn-ghost" href="{% url 'scans:barcode' %}">إعادة المحاولة</a>
+  </div>
+</section>
+{% endblock %}

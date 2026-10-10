@@ -1,0 +1,41 @@
+﻿{% extends "base.html" %}
+{% load static %}
+{% block title %}الخريطة الرقابية{% endblock %}
+{% block topbar_title %}الخريطة الرقابية{% endblock %}
+{% block extra_head %}
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+{% endblock %}
+{% block content %}
+<div class="page-header">
+  <div>
+    <h1>الخريطة الرقابية</h1>
+    <p class="lead">مواقع البلاغات والمنشآت الغذائية. الألوان تعكس أولوية البلاغ.</p>
+  </div>
+  <a class="btn btn-secondary" href="{% url 'dashboard:municipal' %}">العودة للوحة</a>
+</div>
+<section class="card">
+  <div id="map" style="height:560px"></div>
+</section>
+{% endblock %}
+{% block extra_js %}
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script src="{% static 'js/map-tiles.js' %}?v=3"></script>
+<script>
+const points = {{ map_points_json|safe }};
+const stores = {{ store_points_json|safe }};
+const map = L.map('map').setView([32.8872, 13.1913], 11);
+FSMapTiles.addWithSwitcher(map);
+const colors = {CRITICAL:'#C62828', HIGH:'#C62828', MEDIUM:'#F59E0B', LOW:'#607D8B'};
+(points || []).forEach(p => {
+  L.circleMarker([p.lat, p.lng], { radius: 9, color: colors[p.severity] || '#2E7D32', fillColor: colors[p.severity] || '#2E7D32', fillOpacity: 0.9 })
+    .addTo(map)
+    .bindPopup(`<strong>${p.label || ''}</strong><br>المنتج: ${p.product || '—'}<br>الحالة: ${p.status}<br>الأولوية: ${p.severity}<br>${p.created || ''}<br><a href="${p.url}">فتح البلاغ</a>`);
+});
+(stores || []).forEach(s => {
+  L.marker([s.lat, s.lng]).addTo(map).bindPopup(
+    `<strong>${s.label}</strong><br>${s.type || ''}<br>${s.city || ''}<br>` +
+    (s.url ? `<a href="${s.url}">تفاصيل المنشأة</a>` : 'منشأة غذائية')
+  );
+});
+</script>
+{% endblock %}

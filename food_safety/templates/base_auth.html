@@ -1,0 +1,27 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{% block title %}{{ app_name_ar }}{% endblock %}</title>
+  <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="{% static 'css/design-system.css' %}">
+</head>
+<body>
+  <div class="auth-shell">
+    <div class="auth-card">
+      <div class="auth-brand">
+        <span class="brand-mark"><i data-lucide="shield-check"></i></span>
+        <div>
+          <strong style="display:block;color:var(--fs-navy)">{{ app_name_ar }}</strong>
+          <span class="muted small">منصة رقابية مؤسسية</span>
+        </div>
+      </div>
+      {% block auth_content %}{% endblock %}
+    </div>
+  </div>
+  <script src="https://unpkg.com/lucide@0.469.0"></script>
+  <script>lucide.createIcons();</script>
+</body>
+</html>

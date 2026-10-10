@@ -1,0 +1,39 @@
+{% extends "base.html" %}
+{% block title %}التحقق من سلامة المنتج{% endblock %}
+{% block topbar_title %}التحقق من سلامة المنتج{% endblock %}
+{% block content %}
+<div class="page-header">
+  <div>
+    <h1>التحقق من سلامة المنتج</h1>
+    <p class="lead">ثلاث قنوات تحقق واضحة. مسار الملصق يستخرج النص فقط ثم يمرّر النتائج لمحرك القواعد.</p>
+  </div>
+</div>
+
+<div class="method-grid">
+  <a class="method-card" href="{% url 'scans:barcode' %}">
+    <span class="method-icon"><i data-lucide="scan-barcode"></i></span>
+    <h3>الباركود</h3>
+    <p>إدخال أو مسح رمز المنتج — استعلام مباشر من قاعدة البيانات.</p>
+  </a>
+  <a class="method-card" href="{% url 'scans:search' %}">
+    <span class="method-icon"><i data-lucide="package-search"></i></span>
+    <h3>بيانات المنتج</h3>
+    <p>بحث بالاسم أو العلامة أو رقم E.</p>
+  </a>
+  <a class="method-card" href="{% url 'scans:image' %}">
+    <span class="method-icon"><i data-lucide="file-image"></i></span>
+    <h3>تحليل بيانات الملصق</h3>
+    <p>رفع صورة قائمة المكونات ومراجعة النص المستخرج قبل التحقق.</p>
+  </a>
+</div>
+
+<div class="card panel" style="margin-top:1rem">
+  <div class="split">
+    <div>
+      <h2 class="card-title">إدخال نصي سريع</h2>
+      <p class="muted small">إذا كانت قائمة المكونات متاحة كنص، يمكن إدخالها مباشرة دون صورة.</p>
+    </div>
+    <a class="btn btn-secondary" href="{% url 'scans:manual' %}"><i data-lucide="text"></i> إدخال المكونات</a>
+  </div>
+</div>
+{% endblock %}

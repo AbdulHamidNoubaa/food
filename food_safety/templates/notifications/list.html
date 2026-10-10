@@ -1,0 +1,31 @@
+{% extends "base.html" %}
+{% block title %}الإشعارات{% endblock %}
+{% block topbar_title %}الإشعارات{% endblock %}
+{% block content %}
+<div class="page-header">
+  <div>
+    <h1>الإشعارات</h1>
+    <p class="lead">تنبيهات نتائج التحقق وتحديثات البلاغات.</p>
+  </div>
+  <form method="post" action="{% url 'notifications:mark_all' %}">{% csrf_token %}<button class="btn btn-secondary" type="submit">تعليم الكل كمقروء</button></form>
+</div>
+<div class="stack">
+  {% for n in notifications %}
+  <article class="card">
+    <div class="split">
+      <div>
+        <strong>{{ n.title }}</strong>
+        {% if not n.is_read %}<span class="status-badge status-NEW"><span class="dot"></span> جديد</span>{% endif %}
+        <p class="muted" style="margin:0.35rem 0 0">{{ n.body }}</p>
+        <p class="muted small">{{ n.created_at|date:"Y-m-d H:i" }}</p>
+      </div>
+      {% if not n.is_read %}
+      <form method="post" action="{% url 'notifications:mark_read' n.id %}">{% csrf_token %}<button class="btn btn-secondary btn-sm" type="submit">مقروء</button></form>
+      {% endif %}
+    </div>
+  </article>
+  {% empty %}
+  <section class="card empty-state"><h3>لا إشعارات حاليًا</h3><p>ستظهر هنا تنبيهات التحقق وتحديثات البلاغات.</p></section>
+  {% endfor %}
+</div>
+{% endblock %}

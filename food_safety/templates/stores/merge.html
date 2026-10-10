@@ -1,0 +1,26 @@
+{% extends "base.html" %}
+{% block title %}دمج منشأة{% endblock %}
+{% block topbar_title %}دمج منشآت مكررة{% endblock %}
+{% block content %}
+<div class="page-header">
+  <div>
+    <h1>دمج: {{ store.name }}</h1>
+    <p class="lead">ستُنقل البلاغات إلى المنشأة المستهدفة وتُعطَّل المنشأة الحالية.</p>
+  </div>
+  <a class="btn btn-secondary" href="{% url 'stores:detail' store.id %}">إلغاء</a>
+</div>
+<section class="card panel" style="max-width:640px">
+  <form method="post" class="form-grid">
+    {% csrf_token %}
+    <div>
+      <label for="{{ form.target.id_for_label }}">{{ form.target.label }}</label>
+      {{ form.target }}
+      <div class="muted small">{{ form.target.help_text }}</div>
+      {{ form.target.errors }}
+    </div>
+    <div class="actions">
+      <button class="btn btn-danger" type="submit" onclick="return confirm('تأكيد الدمج؟');">دمج الآن</button>
+    </div>
+  </form>
+</section>
+{% endblock %}

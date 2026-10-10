@@ -1,0 +1,107 @@
+﻿{% extends "base.html" %}
+{% load static %}
+{% block title %}{{ store.name }}{% endblock %}
+{% block topbar_title %}تفاصيل المنشأة{% endblock %}
+{% block extra_head %}
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+{% endblock %}
+{% block content %}
+<div class="page-header">
+  <div>
+    <h1>{{ store.name }}</h1>
+    <p class="lead">{{ store.type_display }}{% if store.city %} · {{ store.city }}{% endif %}</p>
+  </div>
+  <div class="actions">
+    <span class="badge">{{ store.get_status_display }}</span>
+    {% if can_manage %}
+      <a class="btn btn-primary" href="{% url 'stores:edit' store.id %}"><i data-lucide="pencil"></i> تعديل</a>
+      <a class="btn btn-secondary" href="{% url 'stores:merge' store.id %}">دمج</a>
+      {% if store.status != "INACTIVE" %}
+      <form method="post" action="{% url 'stores:deactivate' store.id %}" style="display:inline" onsubmit="return confirm('تعطيل المنشأة؟');">
+        {% csrf_token %}
+        <button class="btn btn-secondary" type="submit">تعطيل</button>
+      </form>
+      {% endif %}
+    {% endif %}
+    <a class="btn btn-secondary" href="{% url 'stores:list' %}">رجوع</a>
+  </div>
+</div>
+
+<div class="grid-2 panel">
+  <section class="card">
+    <h2 class="card-title">بيانات المنشأة</h2>
+    <div class="stack" style="margin-top:0.85rem">
+      <div><span class="muted small">النوع</span><div>{{ store.type_display }}</div></div>
+      <div><span class="muted small">العنوان</span><div>{{ store.address|default:"—" }}</div></div>
+      <div><span class="muted small">المدينة / المنطقة</span><div>{{ store.city|default:"—" }}{% if store.district %} · {{ store.district }}{% endif %}</div></div>
+      <div><span class="muted small">الشارع</span><div>{{ store.street|default:"—" }}</div></div>
+      <div><span class="muted small">وصف الموقع</span><div>{{ store.location_description|default:"—" }}</div></div>
+      <div><span class="muted small">الإحداثيات</span>
+        <div>{% if store.latitude %}{{ store.latitude }}, {{ store.longitude }}{% else %}—{% endif %}</div>
+      </div>
+      <div><span class="muted small">عدد البلاغات</span><div><strong>{{ complaint_count }}</strong></div></div>
+      <div><span class="muted small">آخر بلاغ</span>
+        <div>
+          {% if last_complaint %}
+            {{ last_complaint.created_at|date:"Y-m-d H:i" }}
+            {% if last_safety_status %} · {{ last_safety_status }}{% endif %}
+          {% else %}—{% endif %}
+        </div>
+      </div>
+      <div><span class="muted small">أُنشئت بواسطة</span><div>{{ store.created_by|default:"—" }} · {{ store.created_at|date:"Y-m-d" }}</div></div>
+    </div>
+  </section>
+  <section class="card">
+    <h2 class="card-title">الموقع على الخريطة</h2>
+    {% if store.latitude and store.longitude %}
+      <div id="map" style="height:280px;margin-top:0.75rem;border-radius:10px"></div>
+    {% else %}
+      <p class="muted" style="margin-top:0.85rem">لا إحداثيات مسجّلة.</p>
+    {% endif %}
+  </section>
+</div>
+
+<section class="card panel">
+  <h2 class="card-title">منتجات مرتبطة بالبلاغات</h2>
+  <ul style="margin-top:0.75rem">
+    {% for p in products %}
+      <li>{{ p.name_ar }}{% if p.barcode %} <span class="muted">({{ p.barcode }})</span>{% endif %}</li>
+    {% empty %}<li class="muted">—</li>{% endfor %}
+  </ul>
+</section>
+
+<section class="card panel">
+  <h2 class="card-title">سجل البلاغات</h2>
+  <div class="table-wrap" style="margin-top:0.75rem">
+    <table class="table">
+      <thead>
+        <tr><th>التاريخ</th><th>المنتج</th><th>نتيجة السلامة</th><th>حالة البلاغ</th><th></th></tr>
+      </thead>
+      <tbody>
+        {% for c in complaints %}
+        <tr>
+          <td>{{ c.created_at|date:"Y-m-d H:i" }}</td>
+          <td>{{ c.product.name_ar|default:"—" }}</td>
+          <td>{{ c.safety_result.product_status|default:"—" }}</td>
+          <td>{{ c.get_status_display }}</td>
+          <td><a href="{% url 'complaints:detail' c.id %}">فتح</a></td>
+        </tr>
+        {% empty %}
+        <tr><td colspan="5" class="muted">لا بلاغات بعد</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</section>
+{% endblock %}
+{% block extra_js %}
+{% if store.latitude and store.longitude %}
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script src="{% static 'js/map-tiles.js' %}?v=3"></script>
+<script>
+const map = L.map('map').setView([{{ store.latitude }}, {{ store.longitude }}], 16);
+FSMapTiles.addDefault(map);
+L.marker([{{ store.latitude }}, {{ store.longitude }}]).addTo(map).bindPopup("{{ store.name|escapejs }}");
+</script>
+{% endif %}
+{% endblock %}

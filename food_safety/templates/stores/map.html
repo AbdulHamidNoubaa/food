@@ -1,0 +1,54 @@
+﻿{% extends "base.html" %}
+{% load static %}
+{% block title %}خريطة المنشآت{% endblock %}
+{% block topbar_title %}خريطة المنشآت الغذائية{% endblock %}
+{% block extra_head %}
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+{% endblock %}
+{% block content %}
+<div class="page-header">
+  <div>
+    <h1>خريطة المنشآت الغذائية</h1>
+    <p class="lead">منشآت أُنشئت عبر البلاغات — بحث وتصفية حسب النوع.</p>
+  </div>
+  <a class="btn btn-secondary" href="{% url 'stores:list' %}">قائمة المنشآت</a>
+</div>
+
+<form class="filters panel" method="get">
+  <div>
+    <label for="type">نوع المنشأة</label>
+    <select id="type" name="type" onchange="this.form.submit()">
+      <option value="">الكل</option>
+      {% for code, label in type_choices %}
+      <option value="{{ code }}" {% if etype == code %}selected{% endif %}>{{ label }}</option>
+      {% endfor %}
+    </select>
+  </div>
+</form>
+
+<section class="card panel">
+  <div id="map" style="height:560px"></div>
+</section>
+{% endblock %}
+{% block extra_js %}
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script src="{% static 'js/map-tiles.js' %}?v=3"></script>
+<script>
+const points = {{ points_json|safe }};
+const map = L.map('map').setView([32.8872, 13.1913], 11);
+FSMapTiles.addWithSwitcher(map);
+const bounds = [];
+(points || []).forEach(function(s){
+  if (s.lat == null || s.lng == null) return;
+  const m = L.marker([s.lat, s.lng]).addTo(map);
+  m.bindPopup(
+    '<strong>' + s.name + '</strong><br>' +
+    (s.type || '') + '<br>' +
+    'البلاغات: ' + (s.complaint_count || 0) + '<br>' +
+    '<a href="' + s.url + '">تفاصيل المنشأة</a>'
+  );
+  bounds.push([s.lat, s.lng]);
+});
+if (bounds.length) map.fitBounds(bounds, { padding: [30, 30] });
+</script>
+{% endblock %}

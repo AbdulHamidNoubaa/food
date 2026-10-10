@@ -1,0 +1,48 @@
+{% extends "base.html" %}
+{% block title %}المستخدمون{% endblock %}
+{% block topbar_title %}إدارة المستخدمين{% endblock %}
+{% block content %}
+<div class="page-header">
+  <div>
+    <h1>إدارة المستخدمين</h1>
+    <p class="lead">حسابات النظام وصلاحيات الأدوار.</p>
+  </div>
+</div>
+<section class="card panel">
+  <form method="get" class="filters">
+    <div><label>بحث</label><input type="search" name="q" value="{{ q }}"></div>
+    <div>
+      <label>الدور</label>
+      <select name="role">
+        <option value="">الكل</option>
+        {% for v,l in role_choices %}<option value="{{ v }}" {% if role == v %}selected{% endif %}>{{ l }}</option>{% endfor %}
+      </select>
+    </div>
+    <div></div>
+    <div><button class="btn btn-primary" type="submit">تصفية</button></div>
+  </form>
+</section>
+<section class="card">
+  <div class="table-wrap">
+    <table class="table">
+      <thead>
+        <tr><th>الاسم</th><th>Username</th><th>Role</th><th>الحالة</th><th>آخر دخول</th><th>البريد</th></tr>
+      </thead>
+      <tbody>
+        {% for u in page_obj %}
+        <tr>
+          <td>{{ u.full_name|default:u.username }}</td>
+          <td>{{ u.username }}</td>
+          <td><span class="role-badge">{{ u.get_role_display }}</span></td>
+          <td>{% if u.is_active %}{% include "partials/status_badge.html" with code="SAFE" label="نشط" %}{% else %}{% include "partials/status_badge.html" with code="UNSAFE" label="موقوف" %}{% endif %}</td>
+          <td>{{ u.last_login|date:"Y-m-d H:i"|default:"—" }}</td>
+          <td>{{ u.email|default:"—" }}</td>
+        </tr>
+        {% empty %}
+        <tr><td colspan="6"><div class="empty-state"><h3>لا مستخدمين</h3></div></td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</section>
+{% endblock %}

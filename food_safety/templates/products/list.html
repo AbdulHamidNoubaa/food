@@ -1,0 +1,52 @@
+{% extends "base.html" %}
+{% block title %}المنتجات{% endblock %}
+{% block topbar_title %}إدارة المنتجات{% endblock %}
+{% block content %}
+<div class="page-header">
+  <div>
+    <h1>إدارة المنتجات</h1>
+    <p class="lead">سجل المنتجات الغذائية المسجّلة في النظام.</p>
+  </div>
+</div>
+<section class="card panel">
+  <form method="get" class="filters">
+    <div><label>بحث</label><input type="search" name="q" value="{{ q }}" placeholder="اسم / باركود / شركة"></div>
+    <div><label>الفئة</label><input type="text" name="category" value="{{ category }}"></div>
+    <div></div>
+    <div><button class="btn btn-primary" type="submit">تصفية</button></div>
+  </form>
+</section>
+<section class="card">
+  <div class="table-wrap">
+    <table class="table">
+      <thead>
+        <tr><th>المنتج</th><th>Barcode</th><th>الشركة</th><th>المكونات</th><th>عمليات التحقق</th><th>الإجراءات</th></tr>
+      </thead>
+      <tbody>
+        {% for p in page_obj %}
+        <tr>
+          <td><strong>{{ p.name_ar }}</strong><div class="muted small">{{ p.name_en }}</div></td>
+          <td>{{ p.barcode }}</td>
+          <td>{{ p.brand.name_ar|default:p.manufacturer|default:"—" }}</td>
+          <td>{{ p.ingredient_count }}</td>
+          <td>{{ p.scan_count }}</td>
+          <td class="actions">
+            <a class="btn btn-secondary btn-sm" href="{% url 'products:detail' p.id %}">عرض</a>
+            <a class="btn btn-primary btn-sm" href="{% url 'scans:check_product' p.id %}">تحقق</a>
+          </td>
+        </tr>
+        {% empty %}
+        <tr><td colspan="6"><div class="empty-state"><h3>لا توجد منتجات</h3></div></td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% if page_obj.has_other_pages %}
+  <div class="actions" style="margin-top:1rem">
+    {% if page_obj.has_previous %}<a class="btn btn-secondary btn-sm" href="?page={{ page_obj.previous_page_number }}&q={{ q }}&category={{ category }}">السابق</a>{% endif %}
+    <span class="muted small">صفحة {{ page_obj.number }} / {{ page_obj.paginator.num_pages }}</span>
+    {% if page_obj.has_next %}<a class="btn btn-secondary btn-sm" href="?page={{ page_obj.next_page_number }}&q={{ q }}&category={{ category }}">التالي</a>{% endif %}
+  </div>
+  {% endif %}
+</section>
+{% endblock %}

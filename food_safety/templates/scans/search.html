@@ -1,0 +1,47 @@
+{% extends "base.html" %}
+{% block title %}بحث المنتجات{% endblock %}
+{% block topbar_title %}بيانات المنتج{% endblock %}
+{% block content %}
+<div class="page-header">
+  <div>
+    <h1>البحث عن منتج</h1>
+    <p class="lead">ابحث بالاسم أو العلامة التجارية أو الباركود أو رقم المادة المضافة.</p>
+  </div>
+</div>
+<section class="card panel">
+  <form method="get" class="filters" style="grid-template-columns:1fr auto">
+    <div>
+      <label for="id_q">كلمة البحث</label>
+      <input type="search" name="q" id="id_q" value="{{ form.q.value|default:'' }}" placeholder="مثال: بسكويت / E171 / 6223000000002">
+    </div>
+    <div><button class="btn btn-primary" type="submit"><i data-lucide="search"></i> بحث</button></div>
+  </form>
+</section>
+<section class="card">
+  <div class="table-wrap">
+    <table class="table">
+      <thead>
+        <tr><th>المنتج</th><th>الباركود</th><th>الشركة / العلامة</th><th>الفئة</th><th>الإجراء</th></tr>
+      </thead>
+      <tbody>
+        {% for p in results %}
+        <tr>
+          <td>{{ p.name_ar }}</td>
+          <td>{{ p.barcode }}</td>
+          <td>{{ p.brand.name_ar|default:p.manufacturer|default:"—" }}</td>
+          <td>{{ p.category|default:"—" }}</td>
+          <td><a class="btn btn-primary btn-sm" href="{% url 'scans:check_product' p.id %}">تحقق</a></td>
+        </tr>
+        {% empty %}
+        <tr><td colspan="5">
+          <div class="empty-state">
+            <h3>لا توجد نتائج</h3>
+            <p>جرّب باركودًا تجريبيًا مثل 6223000000001 أو 6223000000002</p>
+          </div>
+        </td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</section>
+{% endblock %}

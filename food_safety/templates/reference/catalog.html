@@ -1,0 +1,87 @@
+{% extends "base.html" %}
+{% block title %}قاعدة البيانات المرجعية{% endblock %}
+{% block topbar_title %}قاعدة البيانات المرجعية{% endblock %}
+{% block content %}
+<div class="page-header">
+  <div>
+    <h1>قاعدة البيانات المرجعية للمضافات</h1>
+    <p class="lead">مرجع معياري (Codex / JECFA وغيرها). حالة Codex لا تعني السماح في ليبيا تلقائيًا — يُطبَّق التصنيف المحلي أولًا.</p>
+  </div>
+  <div class="actions">
+    {% if can_manage %}
+    <form method="post" action="{% url 'reference:sync' %}" style="display:inline">
+      {% csrf_token %}
+      <button class="btn btn-teal" type="submit"><i data-lucide="refresh-cw"></i> مزامنة المرجع</button>
+    </form>
+    <a class="btn btn-secondary" href="{% url 'reference:sync_logs' %}">سجل المزامنة</a>
+    {% endif %}
+    <a class="btn btn-secondary" href="{% url 'ingredients:banned' %}">المواد المحلية / المحظورة</a>
+  </div>
+</div>
+
+<form class="filters panel" method="get">
+  <div>
+    <label for="q">بحث (عربي / إنجليزي / E / INS / CAS / مرادف)</label>
+    <input type="search" id="q" name="q" value="{{ q }}" placeholder="مثال: E171 أو Titanium Dioxide">
+  </div>
+  <div style="align-self:end">
+    <button class="btn btn-primary" type="submit"><i data-lucide="search"></i> بحث</button>
+  </div>
+</form>
+
+<section class="card panel">
+  <div class="table-wrap">
+    <table class="table">
+      <thead>
+        <tr>
+          <th>E / INS</th>
+          <th>الاسم</th>
+          <th>CAS</th>
+          <th>الصنف الوظيفي</th>
+          <th>حالة ليبيا (نافذة)</th>
+          <th>Codex (معلوماتي)</th>
+          <th></th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for a in page_obj %}
+        {% with ov=a.local_overrides.all.0 %}
+        <tr>
+          <td><strong>{{ a.e_number|default:a.ins_number|default:"—" }}</strong></td>
+          <td>
+            <div>{{ a.name_ar|default:a.name_en }}</div>
+            <div class="muted small">{{ a.name_en }}</div>
+          </td>
+          <td>{{ a.cas_number|default:"—" }}</td>
+          <td>{{ a.functional_class|default:"—" }}</td>
+          <td>
+            {% if ov %}
+              <span class="badge">{{ ov.get_status_display }}</span>
+            {% else %}
+              <span class="muted">غير محدد محليًا</span>
+            {% endif %}
+          </td>
+          <td>
+            {% for s in a.status_records.all %}
+              {% if "CODEX" in s.source.code %}{{ s.get_status_display }}{% endif %}
+            {% empty %}—
+            {% endfor %}
+          </td>
+          <td><a class="btn btn-secondary btn-sm" href="{% url 'reference:detail' a.id %}">تفاصيل</a></td>
+        </tr>
+        {% endwith %}
+        {% empty %}
+        <tr><td colspan="7"><div class="empty-state"><h3>لا توجد نتائج</h3><p>جرّب مزامنة القاعدة المرجعية أو غيّر كلمة البحث.</p></div></td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% if page_obj.has_other_pages %}
+  <div class="actions" style="margin-top:1rem">
+    {% if page_obj.has_previous %}<a class="btn btn-secondary" href="?q={{ q }}&page={{ page_obj.previous_page_number }}">السابق</a>{% endif %}
+    <span class="muted">صفحة {{ page_obj.number }} / {{ page_obj.paginator.num_pages }}</span>
+    {% if page_obj.has_next %}<a class="btn btn-secondary" href="?q={{ q }}&page={{ page_obj.next_page_number }}">التالي</a>{% endif %}
+  </div>
+  {% endif %}
+</section>
+{% endblock %}

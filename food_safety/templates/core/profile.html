@@ -1,0 +1,31 @@
+{% extends "base.html" %}
+{% block title %}الحساب{% endblock %}
+{% block topbar_title %}الحساب{% endblock %}
+{% block content %}
+<div class="page-header">
+  <div>
+    <h1>{{ user.full_name|default:user.username }}</h1>
+    <p class="lead">{{ user.get_role_display }} · {{ user.email }}</p>
+  </div>
+</div>
+<section class="card">
+  <h2 class="card-title">آخر عمليات التحقق</h2>
+  <div class="table-wrap" style="margin-top:0.75rem">
+    <table class="table">
+      <thead><tr><th>التاريخ</th><th>الطريقة</th><th>المنتج</th><th>الحالة</th></tr></thead>
+      <tbody>
+        {% for s in recent %}
+        <tr>
+          <td>{{ s.created_at|date:"Y-m-d H:i" }}</td>
+          <td>{{ s.get_scan_method_display }}</td>
+          <td>{{ s.product.name_ar|default:s.query_text|default:"—" }}</td>
+          <td>{% if s.assessment %}{% include "partials/status_badge.html" with code=s.assessment.product_status label=s.assessment.get_product_status_display %}{% endif %}</td>
+        </tr>
+        {% empty %}
+        <tr><td colspan="4"><div class="empty-state"><h3>لا توجد عمليات بعد</h3></div></td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</section>
+{% endblock %}
