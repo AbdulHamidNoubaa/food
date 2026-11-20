@@ -4,12 +4,13 @@
 {% block content %}
 <section class="card empty-state" style="max-width:680px;margin-inline:auto">
   <span class="method-icon" style="margin:0 auto 1rem"><i data-lucide="package-x"></i></span>
-  <h1>لم يتم العثور على منتج بهذا الرمز</h1>
-  <p>الباركود <strong>{{ barcode }}</strong> غير مسجّل في قاعدة المنتجات الحالية.</p>
+  <h1>المنتج غير مضاف</h1>
+  <p>الباركود <strong>{{ barcode }}</strong> غير مضاف إلى قاعدة المنتجات.</p>
+  <p><strong>لا يمكن تصنيفه.</strong> التصنيف يعمل فقط على منتج مضاف ومكوّناته الغذائية المسجّلة.</p>
+  {% include "partials/status_badge.html" with code="UNKNOWN" label="غير مضاف — لا يمكن تصنيفه" %}
   <div class="actions" style="justify-content:center;margin-top:1.25rem">
-    <a class="btn btn-primary" href="{% url 'scans:manual' %}">إدخال المكونات يدويًا</a>
-    <a class="btn btn-secondary" href="{% url 'scans:image' %}">تحليل بيانات الملصق</a>
-    <a class="btn btn-ghost" href="{% url 'scans:barcode' %}">إعادة المحاولة</a>
+    <a class="btn btn-primary" href="{% url 'scans:barcode' %}">إعادة المحاولة</a>
+    <a class="btn btn-ghost" href="{% url 'scans:search' %}">بحث بالاسم</a>
   </div>
 </section>
 {% endblock %}

@@ -24,6 +24,14 @@
         <tr><th>المنتج</th><th>الباركود</th><th>الشركة / العلامة</th><th>الفئة</th><th>الإجراء</th></tr>
       </thead>
       <tbody>
+        {% if not searched %}
+        <tr><td colspan="5">
+          <div class="empty-state">
+            <h3>ابدأ البحث</h3>
+            <p>أدخل اسم المنتج أو الباركود. المنتجات المضافة فقط يمكن التحقق منها.</p>
+          </div>
+        </td></tr>
+        {% else %}
         {% for p in results %}
         <tr>
           <td>{{ p.name_ar }}</td>
@@ -35,11 +43,12 @@
         {% empty %}
         <tr><td colspan="5">
           <div class="empty-state">
-            <h3>لا توجد نتائج</h3>
-            <p>جرّب باركودًا تجريبيًا مثل 6223000000001 أو 6223000000002</p>
+            <h3>المنتج غير مضاف</h3>
+            <p>لا يوجد منتج مطابق في قاعدة البيانات، لذلك <strong>لا يمكن تصنيفه</strong>.</p>
           </div>
         </td></tr>
         {% endfor %}
+        {% endif %}
       </tbody>
     </table>
   </div>

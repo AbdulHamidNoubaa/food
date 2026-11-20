@@ -16,6 +16,8 @@
     <div><span class="muted small">بلد المنشأ</span><div>{{ product.country_of_origin|default:"—" }}</div></div>
     <div><span class="muted small">تاريخ الصلاحية</span><div>{{ product.expiry_date|default:"—" }}</div></div>
     <div><span class="muted small">الفئة</span><div>{{ product.category|default:"—" }}</div></div>
+    <div><span class="muted small">الحجم / الوزن</span><div>{{ product.net_content|default:"—" }}</div></div>
+    <div><span class="muted small">نوع الباركود</span><div>{{ product.barcode_type|default:"—" }}</div></div>
   </div>
 </section>
 <section class="card">

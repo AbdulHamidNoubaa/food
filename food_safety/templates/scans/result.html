@@ -13,6 +13,8 @@
       المنتج يحتاج إلى مراجعة بسبب وجود مكوّن مقيد أو يتطلب تحققًا إضافيًا.
     {% elif assessment.product_status == "UNSAFE" %}
       المنتج غير آمن وفق قواعد التحقق الحالية لوجود مادة محظورة أو عالية الخطورة.
+    {% elif assessment.product_status == "UNKNOWN" and not assessment.ingredient_results %}
+      لا يمكن تصنيف هذا المنتج.
     {% else %}
       لم تكتمل بيانات المطابقة بشكل كافٍ لاعتبار المنتج آمنًا.
     {% endif %}

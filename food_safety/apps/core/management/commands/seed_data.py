@@ -78,6 +78,8 @@ class Command(BaseCommand):
         from django.core.management import call_command
 
         call_command("import_reference_data")
+        self.stdout.write("Importing product barcode catalog...")
+        call_command("import_product_catalog")
         self.stdout.write(self.style.SUCCESS("Seed completed successfully."))
         self.stdout.write("Demo logins:")
         self.stdout.write("  admin / admin123")

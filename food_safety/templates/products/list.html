@@ -36,7 +36,14 @@
           </td>
         </tr>
         {% empty %}
-        <tr><td colspan="6"><div class="empty-state"><h3>لا توجد منتجات</h3></div></td></tr>
+        <tr><td colspan="6"><div class="empty-state">
+          {% if q %}
+          <h3>المنتج غير مضاف</h3>
+          <p>لا يوجد منتج مطابق، لذلك لا يمكن تصنيفه.</p>
+          {% else %}
+          <h3>لا توجد منتجات</h3>
+          {% endif %}
+        </div></td></tr>
         {% endfor %}
       </tbody>
     </table>

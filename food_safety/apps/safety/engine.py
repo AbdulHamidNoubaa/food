@@ -175,9 +175,34 @@ def assess_ingredient_texts(texts: list[str], confidence_map: dict[str, float] |
     }
 
 
+_NON_FOOD_CATEGORIES = {
+    "منتجات غير غذائية",
+    "تبغ وسجائر",
+    "مكملات غذائية",
+}
+
+
+def _unclassified(reason: str) -> dict:
+    return {
+        "product_status": SafetyAssessment.ProductStatus.UNKNOWN,
+        "results": [],
+        "summary_reason": reason,
+    }
+
+
 def assess_product(product) -> dict:
+    category = (getattr(product, "category", "") or "").strip()
+    if category in _NON_FOOD_CATEGORIES:
+        return _unclassified(
+            "هذا المنتج غير غذائي ومضاف في السجل للمرجعية فقط، لذلك لا يمكن تصنيفه ضمن سلامة الغذاء."
+        )
+
     texts = []
     for pi in product.product_ingredients.select_related("ingredient").all():
         ing = pi.ingredient
         texts.append(ing.e_number or ing.name_ar or ing.name_en)
+    if not texts:
+        return _unclassified(
+            "المنتج مضاف، لكن لا تتوفر له مكونات غذائية يمكن مطابقتها، لذلك لا يمكن تصنيفه."
+        )
     return assess_ingredient_texts(texts)

@@ -100,9 +100,10 @@ def scan_barcode(request):
 
 @require_http_methods(["GET", "POST"])
 def search_product(request):
+    searched = bool((request.GET.get("q") or "").strip())
     form = ProductSearchForm(request.GET or None)
     results = []
-    if form.is_valid():
+    if searched and form.is_valid():
         q = form.cleaned_data["q"].strip()
         results = (
             Product.objects.filter(
@@ -118,7 +119,11 @@ def search_product(request):
             .select_related("brand")
             .distinct()[:50]
         )
-    return render(request, "scans/search.html", {"form": form, "results": results})
+    return render(
+        request,
+        "scans/search.html",
+        {"form": form, "results": results, "searched": searched},
+    )
 
 
 def check_product(request, product_id):

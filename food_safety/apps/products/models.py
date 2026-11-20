@@ -27,6 +27,8 @@ class Product(models.Model):
     )
     country_of_origin = models.CharField(max_length=100, blank=True)
     manufacturer = models.CharField(max_length=200, blank=True)
+    net_content = models.CharField("الحجم / الوزن", max_length=80, blank=True)
+    barcode_type = models.CharField("نوع الباركود", max_length=20, blank=True)
     image = models.ImageField(upload_to="products/", blank=True, null=True)
     expiry_date = models.DateField(null=True, blank=True)
     category = models.CharField(max_length=100, blank=True)
